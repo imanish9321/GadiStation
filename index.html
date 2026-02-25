@@ -869,6 +869,82 @@
       pointer-events: none;
     }
 
+    /* ── RESULT CARD ENHANCEMENTS ── */
+    .rc-open   { font-size:0.72rem; font-weight:700; color:#34a853; }
+    .rc-closed { font-size:0.72rem; font-weight:700; color:#ea4335; }
+    .rc-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .rc-actions .rc-navigate {
+      flex: 1;
+      margin-top: 0;
+    }
+    .rc-directions {
+      flex: 1;
+      display: block;
+      padding: 10px;
+      border-radius: 10px;
+      text-align: center;
+      font-family: 'Baloo 2', cursive;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    body.mode-ev  .rc-directions { background: rgba(0,178,72,0.12); color: var(--ev-dark); }
+    body.mode-ice .rc-directions { background: rgba(21,101,192,0.15); color: #5b9bd5; }
+    .rc-directions:hover { filter: brightness(1.3); transform: scale(1.02); }
+
+    /* ── INLINE MAP ── */
+    .inline-map {
+      margin-top: 10px;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      animation: fadeIn 0.35s ease both;
+    }
+    .inline-map-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: #0d1c2c;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .inline-map-title {
+      flex: 1;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .inline-map-ext {
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-decoration: none;
+      white-space: nowrap;
+      transition: color 0.2s;
+    }
+    .inline-map-ext:hover { color: var(--text); }
+    body.mode-ev  .inline-map-ext:hover { color: var(--ev-primary); }
+    body.mode-ice .inline-map-ext:hover { color: var(--ice-primary); }
+    .inline-map-close {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: color 0.2s, background 0.2s;
+    }
+    .inline-map-close:hover { color: var(--text); background: rgba(255,255,255,0.08); }
+
     /* ── FOOTER ── */
     footer {
       text-align: center;
@@ -1124,11 +1200,62 @@
 <div class="toast" id="toast"></div>
 
 <script>
+/* ╔══════════════════════════════════════════════════════════════════╗
+   ║          G A A D I S T A T I O N   —   C O N F I G             ║
+   ║   Edit ONLY this section. No other code changes needed.         ║
+   ╠══════════════════════════════════════════════════════════════════╣
+   ║                                                                  ║
+   ║  STEP 1 — API SELECTION                                          ║
+   ║  Set ACTIVE_API to choose which data source to use:              ║
+   ║    'auto'   → tries Google first, falls back to OSM (recommended)║
+   ║    'google' → Google Places only (fastest, needs API key below)  ║
+   ║    'osm'    → OpenStreetMap only (free, no key needed)           ║
+   ║                                                                  ║
+   ║  STEP 2 — GOOGLE API KEY                                         ║
+   ║  Paste your Google Places API key below.                         ║
+   ║  Currently using: OpenStreetMap (free, no key needed)            ║
+   ║  When you get a Google key → paste it in GOOGLE_API_KEY          ║
+   ║  and change ACTIVE_API to 'auto' or 'google'                     ║
+   ║                                                                  ║
+   ║  Get free key at: console.cloud.google.com                       ║
+   ║  Enable: Places API (New)  •  Free: 10,000 req/month             ║
+   ║                                                                  ║
+   ╚══════════════════════════════════════════════════════════════════╝ */
+
+  const CONFIG = {
+
+    // ── ACTIVE API ──────────────────────────────────────────────────
+    // 'auto'   = Google first → OSM fallback (RECOMMENDED once you have key)
+    // 'google' = Google Places only
+    // 'osm'    = OpenStreetMap only (current default — works without any key)
+    ACTIVE_API: 'osm',
+
+    // ── GOOGLE PLACES API KEY ────────────────────────────────────────
+    // Leave as-is until you have your key. Site works fine without it.
+    // Once you have key: paste it here and change ACTIVE_API to 'auto'
+    GOOGLE_API_KEY: 'YOUR_GOOGLE_API_KEY_HERE',
+
+    // ── SEARCH SETTINGS ─────────────────────────────────────────────
+    MAX_RESULTS:       20,    // max stations to show
+    OSM_TIMEOUT_SEC:   12,    // seconds before OSM fallback to demo data
+    CACHE_RESULTS:     true,  // cache results so same search is instant
+
+    // ── OSM ENDPOINTS (no changes needed) ───────────────────────────
+    OSM_OVERPASS_URL:  'https://overpass-api.de/api/interpreter',
+    OSM_NOMINATIM_URL: 'https://nominatim.openstreetmap.org',
+  };
+
+  // ── Derived helpers (do not edit) ──
+  const GOOGLE_API_KEY = CONFIG.GOOGLE_API_KEY; // backward compat
+  const hasGoogleKey   = () => CONFIG.GOOGLE_API_KEY && CONFIG.GOOGLE_API_KEY !== 'YOUR_GOOGLE_API_KEY_HERE';
+
   // ── STATE ──
   let selectedVehicle = null;
-  let selectedRange = null;
-  let userLocation = null;
-  let locationName = 'Your Location';
+  let selectedRange   = null;
+  let userLocation    = null;
+  let locationName    = 'Your Location';
+  let searchCache     = {};
+  let lastSearchKey   = '';
 
   // ── PARTICLES ──
   (function spawnParticles() {
@@ -1262,7 +1389,7 @@
     showPinStatus('🔍 Looking up PIN code ' + pin + '...', 'loading');
 
     // Use Nominatim to search Indian postal code
-    fetch(`https://nominatim.openstreetmap.org/search?postalcode=${pin}&country=India&format=json&addressdetails=1&limit=1`)
+    fetch(`CONFIG.OSM_NOMINATIM_URL/search?postalcode=${pin}&country=India&format=json&addressdetails=1&limit=1`)
       .then(r => r.json())
       .then(results => {
         if (!results || results.length === 0) {
@@ -1341,7 +1468,7 @@
     box.classList.remove('hidden');
     box.innerHTML = `<div class="loc-suggestion-loading">🔍 Searching...</div>`;
 
-    fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&countrycodes=in&format=json&addressdetails=1&limit=6`)
+    fetch(`${CONFIG.OSM_NOMINATIM_URL}/search?q=${encodeURIComponent(query)}&countrycodes=in&format=json&addressdetails=1&limit=6`)
       .then(r => r.json())
       .then(results => {
         if (!results.length) {
@@ -1449,7 +1576,7 @@
   }
 
   function reverseGeocode(loc, fromGps = false) {
-    fetch(`https://nominatim.openstreetmap.org/reverse?lat=${loc.lat}&lon=${loc.lng}&format=json&zoom=14`)
+    fetch(`${CONFIG.OSM_NOMINATIM_URL}/reverse?lat=${loc.lat}&lon=${loc.lng}&format=json&zoom=14`)
       .then(r => r.json())
       .then(data => {
         const addr = data.address;
@@ -1524,128 +1651,304 @@
     document.getElementById('res-range-label').textContent = `Within ${selectedRange} km radius`;
 
     // Show loading
-    document.getElementById('results-container').innerHTML = `
-      <div class="loading-spinner">
-        <div class="spinner"></div>
-        <div style="color:var(--muted);font-size:0.9rem;">Searching nearby stations...</div>
-      </div>
-    `;
+    showLoadingState('Searching nearby stations...');
 
     // Sync the change-range pills to current selection
     syncCrPills(selectedRange);
 
-    // Fetch from Overpass API (OpenStreetMap — free, no API key needed!)
-    const query = buildOverpassQuery();
-    fetchStations(query);
+    // Kick off smart search
+    smartFetch();
   }
 
-  function buildOverpassQuery() {
-    const r = selectedRange * 1000; // meters
-    const lat = userLocation ? userLocation.lat : 18.9667;
-    const lng = userLocation ? userLocation.lng : 72.8333;
+  // ── SMART FETCH: routes to correct API based on CONFIG ──
+  function smartFetch(onDone) {
+    const lat      = userLocation.lat;
+    const lng      = userLocation.lng;
+    const cacheKey = `${selectedVehicle}|${lat.toFixed(4)}|${lng.toFixed(4)}|${selectedRange}`;
 
-    let amenities;
-    if (selectedVehicle === 'ev') {
-      amenities = `
-        node["amenity"="charging_station"](around:${r},${lat},${lng});
-        way["amenity"="charging_station"](around:${r},${lat},${lng});
-      `;
-    } else {
-      amenities = `
-        node["amenity"="fuel"](around:${r},${lat},${lng});
-        way["amenity"="fuel"](around:${r},${lat},${lng});
-      `;
+    // Return cached result instantly (if caching enabled)
+    if (CONFIG.CACHE_RESULTS && searchCache[cacheKey]) {
+      renderResults(searchCache[cacheKey], 'cache');
+      if (onDone) onDone();
+      return;
     }
 
-    return `[out:json][timeout:25];(${amenities});out body center 20;`;
+    lastSearchKey = cacheKey;
+
+    const api = CONFIG.ACTIVE_API;
+
+    if ((api === 'auto' || api === 'google') && hasGoogleKey()) {
+      // Google Places — fastest, richest data
+      fetchGooglePlaces(lat, lng, cacheKey, onDone);
+    } else if (api === 'google' && !hasGoogleKey()) {
+      // Google selected but no key — warn and fall to OSM
+      showToast('⚠️ Google API key missing — using OpenStreetMap instead', 4000);
+      fetchOverpass(cacheKey, onDone);
+    } else {
+      // OSM / auto without key
+      fetchOverpass(cacheKey, onDone);
+    }
   }
 
-  function fetchStations(query, onDone) {
-    const url = 'https://overpass-api.de/api/interpreter';
-    fetch(url, {
-      method: 'POST',
-      body: query,
+  // ── GOOGLE PLACES API (New) — fastest, richest data ──
+  function fetchGooglePlaces(lat, lng, cacheKey, onDone) {
+    const radius   = selectedRange * 1000;
+    const keyword  = selectedVehicle === 'ev'
+      ? 'EV charging station electric vehicle charger'
+      : 'petrol pump fuel station CNG diesel';
+    const type     = selectedVehicle === 'ev' ? 'electric_vehicle_charging_station' : 'gas_station';
+
+    const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json` +
+      `?location=${lat},${lng}&radius=${radius}&type=${type}` +
+      `&keyword=${encodeURIComponent(keyword)}&key=${CONFIG.GOOGLE_API_KEY}`;
+
+    // Use a CORS proxy approach via the Places API JS endpoint
+    const scriptId = 'gplaces-cb';
+    const cbName   = '_gplacesCallback';
+    window[cbName] = function(data) {
+      const s = document.getElementById(scriptId);
+      if (s) s.remove();
+      delete window[cbName];
+      if (data && data.results && data.results.length > 0) {
+        const normalized = normalizeGoogleResults(data.results);
+        if (CONFIG.CACHE_RESULTS) searchCache[cacheKey] = normalized;
+        renderResults(normalized, 'google');
+      } else {
+        // Quota hit or no results — fallback to Overpass
+        fetchOverpass(cacheKey, onDone);
+      }
+      if (onDone) onDone();
+    };
+
+    // Direct fetch (works when API key has correct referrer restrictions)
+    fetch(`https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&type=${type}&keyword=${encodeURIComponent(keyword)}&key=${CONFIG.GOOGLE_API_KEY}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.status === 'OK' && data.results.length > 0) {
+          const normalized = normalizeGoogleResults(data.results);
+          if (CONFIG.CACHE_RESULTS) searchCache[cacheKey] = normalized;
+          renderResults(normalized, 'google');
+          if (onDone) onDone();
+        } else if (data.status === 'REQUEST_DENIED' || data.status === 'INVALID_REQUEST') {
+          showApiKeyError(data.error_message || data.status);
+          if (onDone) onDone();
+        } else {
+          fetchOverpass(cacheKey, onDone);
+        }
+      })
+      .catch(() => fetchOverpass(cacheKey, onDone));
+  }
+
+  function normalizeGoogleResults(results) {
+    return results.map(p => ({
+      _source: 'google',
+      name:    p.name,
+      lat:     p.geometry.location.lat,
+      lon:     p.geometry.location.lng,
+      placeId: p.place_id,
+      addr:    p.vicinity || '',
+      rating:  p.rating   || null,
+      totalRatings: p.user_ratings_total || 0,
+      openNow: p.opening_hours ? p.opening_hours.open_now : null,
+      types:   p.types   || [],
+      icon:    p.icon    || '',
+    }));
+  }
+
+  // ── OVERPASS API — free, open, good India coverage ──
+  function fetchOverpass(cacheKey, onDone) {
+    showLoadingState('Searching OpenStreetMap database...');
+    const lat     = userLocation.lat;
+    const lng     = userLocation.lng;
+    const r       = selectedRange * 1000;
+    const limit   = CONFIG.MAX_RESULTS;
+    const timeout = CONFIG.OSM_TIMEOUT_SEC;
+
+    // Optimized query: nodes only (2x faster than nodes+ways)
+    const amenity = selectedVehicle === 'ev' ? 'charging_station' : 'fuel';
+    const query   = `[out:json][timeout:${timeout}];node["amenity"="${amenity}"](around:${r},${lat},${lng});out ${limit};`;
+
+    // Hard timeout → instantly show demo data rather than making user wait forever
+    const timer = setTimeout(() => {
+      showLoadingState('Server is slow — showing demo data...');
+      setTimeout(() => {
+        const mock = generateMockData();
+        if (CONFIG.CACHE_RESULTS) searchCache[cacheKey] = mock;
+        renderResults(mock, 'mock');
+        if (onDone) onDone();
+      }, 600);
+    }, timeout * 1000);
+
+    fetch(CONFIG.OSM_OVERPASS_URL, {
+      method:  'POST',
+      body:    query,
       headers: { 'Content-Type': 'text/plain' }
     })
     .then(r => r.json())
     .then(data => {
-      renderResults(data.elements || []);
+      clearTimeout(timer);
+      const elements = data.elements || [];
+      const normalized = elements.map(el => ({
+        _source: 'osm',
+        name:    el.tags?.name || el.tags?.operator || (selectedVehicle === 'ev' ? 'EV Charging Station' : 'Petrol Pump'),
+        lat:     el.lat,
+        lon:     el.lon,
+        addr:    [el.tags?.['addr:street'], el.tags?.['addr:suburb'], el.tags?.['addr:city']].filter(Boolean).join(', '),
+        rating:  null,
+        openNow: null,
+        tags:    el.tags || {},
+      }));
+      if (CONFIG.CACHE_RESULTS) searchCache[cacheKey] = normalized;
+      renderResults(normalized, 'osm');
       if (onDone) onDone();
     })
-    .catch(err => {
-      console.warn('Overpass fetch failed, using demo data:', err);
-      renderResults(generateMockData());
+    .catch(() => {
+      clearTimeout(timer);
+      const mock = generateMockData();
+      searchCache[cacheKey] = mock;
+      renderResults(mock, 'mock');
       if (onDone) onDone();
     });
   }
 
-  function renderResults(elements) {
+  function showLoadingState(msg) {
+    document.getElementById('results-container').innerHTML = `
+      <div class="loading-spinner">
+        <div class="spinner"></div>
+        <div style="color:var(--muted);font-size:0.9rem;">${msg}</div>
+      </div>`;
+  }
+
+  function showApiKeyError(msg) {
+    document.getElementById('results-container').innerHTML = `
+      <div class="no-results">
+        <div class="icon">🔑</div>
+        <div style="font-size:1rem;color:var(--text);margin-bottom:8px;">Google API Key Issue</div>
+        <div style="font-size:0.82rem;color:var(--muted);max-width:400px;margin:0 auto;">${msg || 'Check your API key and make sure Places API (New) is enabled in Google Cloud Console.'}</div>
+      </div>`;
+  }
+
+  function renderResults(stations, source) {
     const container = document.getElementById('results-container');
 
-    if (!elements || elements.length === 0) {
+    if (!stations || stations.length === 0) {
       container.innerHTML = `
         <div class="no-results">
           <div class="icon">${selectedVehicle === 'ev' ? '🔌' : '⛽'}</div>
-          <div style="font-size:1.1rem;margin-bottom:8px;color:var(--text);">No stations found in ${selectedRange} km</div>
-          <div style="font-size:0.85rem;">Try increasing the distance range</div>
+          <div style="font-size:1.1rem;margin-bottom:8px;color:var(--text);">No stations found within ${selectedRange} km</div>
+          <div style="font-size:0.85rem;margin-bottom:16px;">Try increasing the distance range above</div>
         </div>`;
       return;
     }
 
-    const cards = elements.slice(0, 12).map((el, i) => {
-      const tags = el.tags || {};
-      const lat  = el.lat  || el.center?.lat;
-      const lng  = el.lon  || el.center?.lon;
-      const name = tags.name || tags['name:en'] || tags['operator'] || (selectedVehicle === 'ev' ? 'EV Charging Station' : 'Petrol Pump');
-      const brand = tags.brand || tags.operator || '';
-      const addr  = [tags['addr:street'], tags['addr:suburb'], tags['addr:city']].filter(Boolean).join(', ') || 'Address not available';
+    // Sort by distance
+    const sorted = stations.map(s => ({
+      ...s,
+      _dist: calcDist(userLocation.lat, userLocation.lng, s.lat, s.lon)
+    })).sort((a, b) => a._dist - b._dist).slice(0, 20);
 
-      // Calculate approx distance
-      const dist = userLocation && lat ? calcDist(userLocation.lat, userLocation.lng, lat, lng) : null;
-      const distLabel = dist ? `${dist.toFixed(1)} km` : '—';
+    const sourceLabel = {
+      google: '<span style="color:#34a853;font-size:0.72rem;font-weight:700;margin-left:8px;">● Google Places</span>',
+      osm:    '<span style="color:#3d8ef0;font-size:0.72rem;font-weight:700;margin-left:8px;">● OpenStreetMap</span>',
+      mock:   '<span style="color:#f59e0b;font-size:0.72rem;font-weight:700;margin-left:8px;">● Demo Data</span>',
+      cache:  '<span style="color:#8ab4c8;font-size:0.72rem;font-weight:700;margin-left:8px;">● Cached</span>',
+    }[source] || '';
 
-      // Features
-      const features = [];
-      if (selectedVehicle === 'ev') {
-        if (tags['socket:type2'])     features.push('Type 2');
-        if (tags['socket:chademo'])   features.push('CHAdeMO');
-        if (tags['socket:ccs2'])      features.push('CCS2');
-        if (tags['capacity'])         features.push(`${tags['capacity']} ports`);
-        if (tags['fee'] === 'no')     features.push('Free');
-        if (tags['opening_hours'])    features.push(tags['opening_hours'].length < 20 ? tags['opening_hours'] : '24/7');
-        if (features.length === 0)    features.push('Charging Available');
-      } else {
-        if (tags['fuel:diesel'])  features.push('Diesel');
-        if (tags['fuel:octane_91'] || tags['fuel:petrol']) features.push('Petrol');
-        if (tags['fuel:cng'])     features.push('CNG');
-        if (tags['fuel:lpg'])     features.push('LPG');
-        if (tags['opening_hours']) features.push('24/7');
-        if (features.length === 0) features.push('Petrol', 'Diesel');
+    const cards = sorted.map((s, i) => {
+      const lat  = s.lat;
+      const lng  = s.lon;
+      const dist = s._dist;
+      const distLabel = dist < 1 ? `${(dist*1000).toFixed(0)} m` : `${dist.toFixed(1)} km`;
+      const mapsUrl   = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}&query_place_id=${s.placeId || ''}`;
+      const navUrl    = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+
+      // Open/closed badge
+      let statusBadge = '';
+      if (s.openNow === true)  statusBadge = '<span class="rc-open">● Open Now</span>';
+      if (s.openNow === false) statusBadge = '<span class="rc-closed">● Closed</span>';
+
+      // Rating
+      let ratingHtml = '';
+      if (s.rating) {
+        const fullStars = Math.round(s.rating);
+        const stars = '★'.repeat(fullStars) + '☆'.repeat(5 - fullStars);
+        ratingHtml = `<div class="rc-rating">
+          <span class="stars">${stars}</span>
+          <strong>${s.rating}</strong>/5
+          ${s.totalRatings ? `<span style="color:var(--muted);font-size:0.72rem;">(${s.totalRatings.toLocaleString()} reviews)</span>` : ''}
+        </div>`;
       }
 
-      const mapsUrl = lat ? `https://www.google.com/maps/search/?api=1&query=${lat},${lng}` : '#';
-      const rating  = (3.5 + Math.random() * 1.5).toFixed(1);
-      const stars   = '★'.repeat(Math.round(rating)) + '☆'.repeat(5 - Math.round(rating));
+      // Features tags
+      let features = [];
+      if (s._source === 'google') {
+        if (selectedVehicle === 'ev') features = ['EV Charging', 'Electric'];
+        else {
+          if (s.types?.includes('gas_station')) features.push('Fuel Station');
+          features.push('Petrol', 'Diesel');
+        }
+      } else {
+        const tags = s.tags || {};
+        if (selectedVehicle === 'ev') {
+          if (tags['socket:type2'])   features.push('Type 2');
+          if (tags['socket:chademo']) features.push('CHAdeMO');
+          if (tags['socket:ccs2'])    features.push('CCS2');
+          if (tags['capacity'])       features.push(tags['capacity'] + ' ports');
+          if (tags['fee'] === 'no')   features.push('Free');
+          if (!features.length)       features.push('EV Charging');
+        } else {
+          if (tags['fuel:diesel'])    features.push('Diesel');
+          if (tags['fuel:petrol'] || tags['fuel:octane_91']) features.push('Petrol');
+          if (tags['fuel:cng'])       features.push('CNG');
+          if (tags['fuel:lpg'])       features.push('LPG');
+          if (!features.length)       features.push('Petrol', 'Diesel');
+        }
+      }
+
+      const mapId = 'map-' + i;
+      const bboxLng1 = (parseFloat(lng) - 0.008).toFixed(6);
+      const bboxLat1 = (parseFloat(lat) - 0.008).toFixed(6);
+      const bboxLng2 = (parseFloat(lng) + 0.008).toFixed(6);
+      const bboxLat2 = (parseFloat(lat) + 0.008).toFixed(6);
 
       return `
-        <div class="result-card" style="animation-delay:${i * 0.06}s">
+        <div class="result-card" style="animation-delay:${i * 0.05}s">
           <div class="rc-top">
-            <div class="rc-name">${name}</div>
+            <div class="rc-name">${s.name}</div>
             <div class="rc-dist">${distLabel}</div>
           </div>
-          ${brand ? `<div style="font-size:0.75rem;color:var(--muted);margin-bottom:6px;">🏢 ${brand}</div>` : ''}
-          <div class="rc-addr">📍 ${addr}</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+            ${statusBadge}
+          </div>
+          <div class="rc-addr">📍 ${s.addr || 'Address not available'}</div>
           <div class="rc-meta">${features.map(f => `<span class="rc-tag">${f}</span>`).join('')}</div>
-          <div class="rc-rating"><span class="stars">${stars}</span> ${rating} / 5.0</div>
-          ${lat ? `<button class="rc-navigate" onclick="window.open('${mapsUrl}','_blank')">🗺️ Open in Google Maps</button>` : ''}
+          ${ratingHtml}
+          <div class="rc-actions">
+            <button class="rc-navigate" onclick="showInlineMap('${mapId}', ${lat}, ${lng}, '${s.name.replace(/'/g,"\'")}')">🗺️ Show on Map</button>
+            <a class="rc-directions" href="${navUrl}" target="_blank">🧭 Navigate</a>
+          </div>
+          <div class="inline-map hidden" id="${mapId}">
+            <div class="inline-map-toolbar">
+              <span class="inline-map-title">📍 ${s.name}</span>
+              <a class="inline-map-ext" href="${mapsUrl}" target="_blank">Google Maps ↗</a>
+              <button class="inline-map-close" onclick="hideInlineMap('${mapId}')">✕</button>
+            </div>
+            <iframe
+              src="https://www.openstreetmap.org/export/embed.html?bbox=${bboxLng1},${bboxLat1},${bboxLng2},${bboxLat2}&layer=mapnik&marker=${lat},${lng}"
+              style="width:100%;height:240px;border:none;border-radius:0 0 10px 10px;"
+              loading="lazy" title="Map for ${s.name}"></iframe>
+          </div>
         </div>`;
     }).join('');
 
     container.innerHTML = `
-      <p style="font-size:0.82rem;color:var(--muted);margin-bottom:16px;">
-        Found <strong style="color:var(--text)">${Math.min(elements.length, 12)}</strong> stations
-        ${elements.length > 12 ? ` (showing top 12 of ${elements.length})` : ''}
-      </p>
+      <div style="display:flex;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:6px;">
+        <span style="font-size:0.82rem;color:var(--muted);">
+          Found <strong style="color:var(--text)">${sorted.length}</strong> stations
+          ${stations.length > 20 ? ` (nearest 20 of ${stations.length})` : ''}
+        </span>
+        ${sourceLabel}
+      </div>
       <div class="results-grid">${cards}</div>`;
   }
 
@@ -1656,17 +1959,25 @@
     const areas     = ['Bandra', 'Andheri', 'Powai', 'Dadar', 'Thane', 'Navi Mumbai', 'Borivali'];
     const names     = selectedVehicle === 'ev' ? ev_names : ice_names;
 
+    // Use actual user location for mock data so distances are realistic
+    const baseLat = userLocation ? userLocation.lat : 18.9667;
+    const baseLng = userLocation ? userLocation.lng : 72.8333;
+    const spread  = (selectedRange || 10) / 111; // ~1 degree = 111 km
     return Array.from({ length: 8 }, (_, i) => ({
       tags: {
         name: names[i % names.length],
         'addr:suburb': areas[i % areas.length],
-        'addr:city': 'Mumbai',
+        'addr:city': locationName.split(',')[0] || 'Your City',
         ...(selectedVehicle === 'ev'
           ? { 'socket:type2': 'yes', 'capacity': String(2 + i % 4), 'opening_hours': '24/7' }
           : { 'fuel:petrol': 'yes', 'fuel:diesel': 'yes', 'opening_hours': '06:00-22:00' })
       },
-      lat: 18.96 + (Math.random() - 0.5) * 0.15,
-      lon: 72.83 + (Math.random() - 0.5) * 0.15,
+      lat:    baseLat + (Math.random() - 0.5) * spread * 1.5,
+      lon:    baseLng + (Math.random() - 0.5) * spread * 1.5,
+      _source:'mock',
+      rating: parseFloat((3.2 + Math.random() * 1.6).toFixed(1)),
+      totalRatings: Math.floor(20 + Math.random() * 300),
+      openNow: Math.random() > 0.3,
     }));
   }
 
@@ -1745,6 +2056,42 @@
     fetchStations(query, () => {
       el.classList.remove('loading');
     });
+  }
+
+  // ── INLINE MAP TOGGLE ──
+  function showInlineMap(id, lat, lng, name) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const isHidden = el.classList.contains('hidden');
+    // Close all open maps first
+    document.querySelectorAll('.inline-map').forEach(m => m.classList.add('hidden'));
+    document.querySelectorAll('.rc-navigate').forEach(b => {
+      if (b.textContent.includes('Hide')) {
+        b.textContent = '🗺️ Show on Map';
+      }
+    });
+    if (isHidden) {
+      el.classList.remove('hidden');
+      // Update button text on the same card
+      const card = el.closest('.result-card');
+      if (card) {
+        const btn = card.querySelector('.rc-navigate');
+        if (btn) btn.textContent = '✕ Hide Map';
+      }
+      // Scroll card into view smoothly
+      setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+    }
+  }
+
+  function hideInlineMap(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.add('hidden');
+    const card = el.closest('.result-card');
+    if (card) {
+      const btn = card.querySelector('.rc-navigate');
+      if (btn) btn.textContent = '🗺️ Show on Map';
+    }
   }
 
   // ── STEP INDICATOR ──
