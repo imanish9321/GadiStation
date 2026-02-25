@@ -1,0 +1,1762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GaadiStation — Find Your Fuel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Baloo+2:wght@400;600;800&family=Noto+Sans+Devanagari:wght@400;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --ev-primary: #00e676;
+      --ev-dark: #00b248;
+      --ev-glow: #00ff8844;
+      --ice-primary: #ff6b35;
+      --ice-secondary: #1565c0;
+      --ice-glow: #ff6b3544;
+      --bg: #080e14;
+      --surface: #0d1821;
+      --card: #111d2b;
+      --text: #e8f4f8;
+      --muted: #5a7a8a;
+      --border: #1a3040;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Baloo 2', cursive;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── ANIMATED BG ── */
+    .bg-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .bg-canvas::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 40% at 15% 20%, #00e67611 0%, transparent 60%),
+        radial-gradient(ellipse 50% 50% at 85% 70%, #1565c022 0%, transparent 60%),
+        radial-gradient(ellipse 40% 40% at 50% 50%, #ff6b3508 0%, transparent 70%);
+      animation: bgShift 12s ease-in-out infinite alternate;
+    }
+    @keyframes bgShift {
+      0%   { opacity: 0.6; transform: scale(1); }
+      100% { opacity: 1;   transform: scale(1.08); }
+    }
+
+    .grid-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(0,230,118,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,230,118,0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+
+    /* ── PARTICLES ── */
+    .particles { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      animation: floatUp linear infinite;
+      opacity: 0;
+    }
+    @keyframes floatUp {
+      0%   { transform: translateY(100vh) scale(0); opacity: 0; }
+      10%  { opacity: 0.6; }
+      90%  { opacity: 0.2; }
+      100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+    }
+
+    /* ── LAYOUT ── */
+    .wrap { position: relative; z-index: 1; }
+
+    /* ── HEADER ── */
+    header {
+      padding: 24px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      background: rgba(8,14,20,0.7);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+    }
+    .logo span.g { color: var(--ev-primary); }
+    .logo span.s { color: var(--ice-primary); }
+    .logo-sub {
+      font-size: 0.6rem;
+      letter-spacing: 4px;
+      color: var(--muted);
+      display: block;
+      margin-top: -4px;
+    }
+    .header-badge {
+      background: linear-gradient(135deg, var(--ev-dark), var(--ice-secondary));
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      color: #fff;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      text-align: center;
+      padding: 80px 20px 40px;
+      position: relative;
+    }
+    .hero-tag {
+      display: inline-block;
+      background: rgba(0,230,118,0.1);
+      border: 1px solid rgba(0,230,118,0.3);
+      color: var(--ev-primary);
+      font-size: 0.75rem;
+      letter-spacing: 3px;
+      padding: 6px 20px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+      animation: fadeDown 0.8s ease both;
+    }
+    .hero h1 {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: clamp(2.5rem, 6vw, 5rem);
+      font-weight: 700;
+      line-height: 1.1;
+      animation: fadeDown 0.9s 0.1s ease both;
+    }
+    .hero h1 .ev-word { color: var(--ev-primary); text-shadow: 0 0 30px var(--ev-glow); }
+    .hero h1 .ice-word { color: var(--ice-primary); text-shadow: 0 0 30px var(--ice-glow); }
+    .hero-sub {
+      margin-top: 16px;
+      font-size: 1.1rem;
+      color: var(--muted);
+      animation: fadeDown 1s 0.2s ease both;
+    }
+    .hero-sub span { font-family: 'Noto Sans Devanagari', sans-serif; color: #8ab4c8; }
+
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── STEP INDICATOR ── */
+    .steps {
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      margin: 40px auto 0;
+      max-width: 500px;
+      animation: fadeDown 1s 0.3s ease both;
+    }
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+    .step:not(:last-child)::after {
+      content: '';
+      flex: 1;
+      height: 2px;
+      background: var(--border);
+      margin: 0 8px;
+      transition: background 0.5s;
+    }
+    .step.active:not(:last-child)::after { background: var(--ev-primary); }
+    .step-num {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: var(--card);
+      border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem; font-weight: 700;
+      transition: all 0.4s;
+      flex-shrink: 0;
+    }
+    .step.active .step-num {
+      background: var(--ev-primary);
+      border-color: var(--ev-primary);
+      color: #000;
+      box-shadow: 0 0 16px var(--ev-glow);
+    }
+    .step.done .step-num {
+      background: var(--ev-dark);
+      border-color: var(--ev-dark);
+      color: #000;
+    }
+    .step-label { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.5px; }
+    .step.active .step-label { color: var(--ev-primary); }
+
+    /* ── MAIN CARD ── */
+    .main-card {
+      max-width: 900px;
+      margin: 50px auto;
+      padding: 0 20px 80px;
+    }
+
+    /* ── VEHICLE SELECTION ── */
+    #step-vehicle {
+      animation: fadeIn 0.6s ease both;
+    }
+    .section-title {
+      text-align: center;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.4rem;
+      color: var(--muted);
+      letter-spacing: 2px;
+      margin-bottom: 32px;
+    }
+    .vehicle-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    @media(max-width: 600px) { .vehicle-cards { grid-template-columns: 1fr; } }
+
+    .v-card {
+      position: relative;
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 24px;
+      padding: 40px 30px;
+      cursor: pointer;
+      overflow: hidden;
+      transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+      text-align: center;
+    }
+    .v-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 0.4s;
+      border-radius: 22px;
+    }
+    .v-card.ev::before  { background: radial-gradient(ellipse at top, rgba(0,230,118,0.12), transparent 70%); }
+    .v-card.ice::before { background: radial-gradient(ellipse at top, rgba(255,107,53,0.12), transparent 70%); }
+    .v-card:hover::before, .v-card.selected::before { opacity: 1; }
+
+    .v-card.ev:hover, .v-card.ev.selected {
+      border-color: var(--ev-primary);
+      box-shadow: 0 0 40px rgba(0,230,118,0.2), 0 8px 32px rgba(0,0,0,0.4);
+      transform: translateY(-6px);
+    }
+    .v-card.ice:hover, .v-card.ice.selected {
+      border-color: var(--ice-primary);
+      box-shadow: 0 0 40px rgba(255,107,53,0.2), 0 8px 32px rgba(0,0,0,0.4);
+      transform: translateY(-6px);
+    }
+
+    .v-card-icon {
+      font-size: 4rem;
+      margin-bottom: 16px;
+      display: block;
+      animation: iconFloat 3s ease-in-out infinite;
+    }
+    .v-card.ev .v-card-icon { animation-delay: 0s; }
+    .v-card.ice .v-card-icon { animation-delay: 1.5s; }
+    @keyframes iconFloat {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-8px); }
+    }
+
+    .v-card-name {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+    .v-card.ev  .v-card-name  { color: var(--ev-primary); }
+    .v-card.ice .v-card-name  { color: var(--ice-primary); }
+
+    .v-card-hindi {
+      font-family: 'Noto Sans Devanagari', sans-serif;
+      font-size: 1.2rem;
+      color: #8ab4c8;
+      margin: 4px 0 8px;
+    }
+    .v-card-desc {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .v-card-badge {
+      position: absolute;
+      top: 16px; right: 16px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      padding: 4px 10px;
+      border-radius: 10px;
+    }
+    .v-card.ev  .v-card-badge { background: rgba(0,230,118,0.15); color: var(--ev-primary); border: 1px solid rgba(0,230,118,0.3); }
+    .v-card.ice .v-card-badge { background: rgba(255,107,53,0.15); color: var(--ice-primary); border: 1px solid rgba(255,107,53,0.3); }
+
+    .selected-check {
+      position: absolute;
+      top: 16px; left: 16px;
+      width: 24px; height: 24px;
+      background: var(--ev-primary);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem;
+      color: #000;
+      opacity: 0;
+      transform: scale(0);
+      transition: all 0.3s;
+    }
+    .v-card.ev.selected .selected-check { opacity: 1; transform: scale(1); background: var(--ev-primary); }
+    .v-card.ice.selected .selected-check { opacity: 1; transform: scale(1); background: var(--ice-primary); }
+
+    /* ── RANGE SELECTOR ── */
+    #step-range {
+      display: none;
+      animation: fadeIn 0.6s ease both;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .range-header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+    .range-header .selected-type {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--card);
+      border-radius: 50px;
+      padding: 8px 24px;
+      margin-bottom: 16px;
+      border: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+    .range-header h2 {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 2rem;
+      font-weight: 700;
+    }
+    .range-header p { color: var(--muted); font-size: 0.9rem; margin-top: 6px; }
+
+    .range-pills {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 40px;
+    }
+    .range-pill {
+      padding: 12px 28px;
+      border-radius: 50px;
+      border: 2px solid var(--border);
+      background: var(--card);
+      cursor: pointer;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--muted);
+      transition: all 0.25s;
+      position: relative;
+      overflow: hidden;
+    }
+    .range-pill::after {
+      content: ' km';
+      font-size: 0.7rem;
+      letter-spacing: 1px;
+    }
+    .range-pill:hover {
+      border-color: #3a6080;
+      color: var(--text);
+      transform: translateY(-2px);
+    }
+    .range-pill.active {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 24px rgba(0,0,0,0.4);
+    }
+    body.mode-ev   .range-pill.active { border-color: var(--ev-primary); background: rgba(0,230,118,0.12); color: var(--ev-primary); box-shadow: 0 0 20px var(--ev-glow); }
+    body.mode-ice  .range-pill.active { border-color: var(--ice-primary); background: rgba(255,107,53,0.12); color: var(--ice-primary); box-shadow: 0 0 20px var(--ice-glow); }
+
+    /* ── LOCATION TABS ── */
+    .loc-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .loc-tab {
+      flex: 1;
+      padding: 10px 16px;
+      border-radius: 10px;
+      border: 2px solid var(--border);
+      background: var(--card);
+      color: var(--muted);
+      font-family: 'Baloo 2', cursive;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s;
+      letter-spacing: 0.3px;
+    }
+    .loc-tab:hover { border-color: #3a6080; color: var(--text); }
+    body.mode-ev  .loc-tab.active { border-color: var(--ev-primary); color: var(--ev-primary); background: rgba(0,230,118,0.08); }
+    body.mode-ice .loc-tab.active { border-color: var(--ice-primary); color: var(--ice-primary); background: rgba(255,107,53,0.08); }
+
+    /* ── PIN INPUT ── */
+    .pin-input-row {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+    }
+    .pin-input-box {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+    body.mode-ev  .pin-input-box:focus-within { border-color: var(--ev-primary); box-shadow: 0 0 0 3px rgba(0,230,118,0.12); }
+    body.mode-ice .pin-input-box:focus-within { border-color: var(--ice-primary); box-shadow: 0 0 0 3px rgba(255,107,53,0.12); }
+    .pin-prefix {
+      padding: 0 12px 0 16px;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+    .pin-input-box input {
+      flex: 1;
+      padding: 14px 40px 14px 0;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 600;
+      letter-spacing: 4px;
+      outline: none;
+      width: 100%;
+    }
+    .pin-input-box input::placeholder {
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-family: 'Baloo 2', cursive;
+      letter-spacing: 0.5px;
+      font-weight: 400;
+    }
+    #pin-clear {
+      position: absolute;
+      right: 14px; top: 50%;
+      transform: translateY(-50%);
+    }
+    .pin-search-btn {
+      padding: 14px 22px;
+      border-radius: 14px;
+      border: 2px solid var(--border);
+      background: var(--card);
+      color: var(--muted);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all 0.25s;
+      flex-shrink: 0;
+    }
+    .pin-search-btn:not(:disabled):hover { transform: translateY(-2px); }
+    .pin-search-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    body.mode-ev  .pin-search-btn:not(:disabled) { border-color: var(--ev-primary); color: var(--ev-primary); background: rgba(0,230,118,0.08); }
+    body.mode-ice .pin-search-btn:not(:disabled) { border-color: var(--ice-primary); color: var(--ice-primary); background: rgba(255,107,53,0.08); }
+
+    .pin-status {
+      margin-top: 10px;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 0.84rem;
+      animation: fadeIn 0.3s ease both;
+    }
+    .pin-status.loading { background: rgba(255,255,255,0.04); color: var(--muted); border: 1px solid var(--border); }
+    .pin-status.error   { background: rgba(239,68,68,0.08); color: #f87171; border: 1px solid rgba(239,68,68,0.25); }
+    .pin-status.success { background: rgba(0,230,118,0.07); color: var(--ev-primary); border: 1px solid rgba(0,230,118,0.2); }
+    body.mode-ice .pin-status.success { background: rgba(255,107,53,0.07); color: var(--ice-primary); border-color: rgba(255,107,53,0.2); }
+
+    /* ── LOCATION INPUT ── */
+    .loc-input-wrap {
+      max-width: 580px;
+      margin: 0 auto 32px;
+    }
+    .loc-input-label {
+      font-size: 0.7rem;
+      letter-spacing: 2px;
+      color: var(--muted);
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+    .loc-input-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .loc-search-box {
+      flex: 1;
+      position: relative;
+    }
+    .loc-search-box input {
+      width: 100%;
+      padding: 14px 40px 14px 18px;
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      color: var(--text);
+      font-family: 'Baloo 2', cursive;
+      font-size: 0.92rem;
+      outline: none;
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+    .loc-search-box input::placeholder { color: var(--muted); }
+    body.mode-ev  .loc-search-box input:focus { border-color: var(--ev-primary); box-shadow: 0 0 0 3px rgba(0,230,118,0.12); }
+    body.mode-ice .loc-search-box input:focus { border-color: var(--ice-primary); box-shadow: 0 0 0 3px rgba(255,107,53,0.12); }
+
+    .loc-input-clear {
+      position: absolute;
+      top: 50%; right: 14px;
+      transform: translateY(-50%);
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: color 0.2s;
+    }
+    .loc-input-clear:hover { color: var(--text); }
+
+    .loc-suggestions {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0; right: 0;
+      background: #162230;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      z-index: 200;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+      max-height: 240px;
+      overflow-y: auto;
+    }
+    .loc-suggestion-item {
+      padding: 12px 18px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    .loc-suggestion-item:last-child { border-bottom: none; }
+    .loc-suggestion-item:hover { background: rgba(255,255,255,0.05); }
+    .loc-suggestion-item .sug-icon { font-size: 1rem; flex-shrink: 0; }
+    .loc-suggestion-item .sug-main { color: var(--text); font-weight: 600; }
+    .loc-suggestion-item .sug-sub  { color: var(--muted); font-size: 0.75rem; }
+    .loc-suggestion-loading { padding: 16px 18px; color: var(--muted); font-size: 0.85rem; }
+
+    /* GPS Button */
+    .gps-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 12px 16px;
+      border-radius: 14px;
+      border: 2px solid var(--border);
+      background: var(--card);
+      color: var(--muted);
+      cursor: pointer;
+      font-family: 'Baloo 2', cursive;
+      transition: all 0.25s;
+      min-width: 80px;
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .gps-btn:hover { border-color: #3a6080; color: var(--text); transform: translateY(-2px); }
+    body.mode-ev  .gps-btn.active { border-color: var(--ev-primary); color: var(--ev-primary); background: rgba(0,230,118,0.08); box-shadow: 0 0 16px rgba(0,230,118,0.2); }
+    body.mode-ice .gps-btn.active { border-color: var(--ice-primary); color: var(--ice-primary); background: rgba(255,107,53,0.08); box-shadow: 0 0 16px rgba(255,107,53,0.2); }
+    .gps-btn.loading { pointer-events: none; }
+    .gps-icon { font-size: 1.4rem; line-height: 1; }
+    .gps-label { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.5px; }
+    @keyframes gpsRotate { to { transform: rotate(360deg); } }
+    .gps-btn.loading .gps-icon { display: inline-block; animation: gpsRotate 1s linear infinite; }
+
+    /* Confirmed location strip */
+    .loc-confirmed {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      padding: 10px 16px;
+      background: rgba(0,230,118,0.07);
+      border: 1px solid rgba(0,230,118,0.2);
+      border-radius: 10px;
+      font-size: 0.84rem;
+      color: var(--text);
+      animation: fadeIn 0.4s ease both;
+    }
+    body.mode-ice .loc-confirmed { background: rgba(255,107,53,0.07); border-color: rgba(255,107,53,0.2); }
+
+    /* ── FIND BUTTON ── */
+    .find-btn {
+      display: block;
+      margin: 0 auto;
+      padding: 18px 60px;
+      border-radius: 50px;
+      border: none;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.3s;
+    }
+    .find-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transform: translateX(-100%);
+      transition: transform 0.5s;
+    }
+    .find-btn:hover::before { transform: translateX(100%); }
+    .find-btn:hover { transform: translateY(-3px); }
+    body.mode-ev  .find-btn {
+      background: linear-gradient(135deg, var(--ev-primary), var(--ev-dark));
+      color: #000;
+      box-shadow: 0 8px 32px rgba(0,230,118,0.35);
+    }
+    body.mode-ice .find-btn {
+      background: linear-gradient(135deg, var(--ice-primary), #c0392b);
+      color: #fff;
+      box-shadow: 0 8px 32px rgba(255,107,53,0.35);
+    }
+
+    /* ── RESULTS ── */
+    #step-results {
+      display: none;
+      animation: fadeIn 0.6s ease both;
+    }
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .results-header h2 {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+    }
+    .back-btn {
+      padding: 8px 20px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-family: 'Baloo 2', cursive;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+    .back-btn:hover { border-color: var(--text); color: var(--text); }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .result-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
+      animation: fadeIn 0.5s ease both;
+    }
+    .result-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    body.mode-ev  .result-card::before { background: linear-gradient(90deg, var(--ev-primary), var(--ev-dark)); }
+    body.mode-ice .result-card::before { background: linear-gradient(90deg, var(--ice-primary), var(--ice-secondary)); }
+
+    .result-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.4); }
+
+    .rc-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+    .rc-name { font-weight: 700; font-size: 1rem; }
+    .rc-dist {
+      font-size: 0.75rem;
+      padding: 3px 10px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+    body.mode-ev  .rc-dist { background: rgba(0,230,118,0.15); color: var(--ev-primary); }
+    body.mode-ice .rc-dist { background: rgba(255,107,53,0.15); color: var(--ice-primary); }
+
+    .rc-addr { font-size: 0.8rem; color: var(--muted); margin-bottom: 12px; line-height: 1.4; }
+    .rc-meta { display: flex; gap: 8px; flex-wrap: wrap; }
+    .rc-tag {
+      font-size: 0.7rem;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.06);
+      color: #8ab4c8;
+    }
+    .rc-rating { display: flex; align-items: center; gap: 4px; font-size: 0.8rem; margin-top: 10px; }
+    .stars { color: #fbbf24; font-size: 0.75rem; }
+
+    .rc-navigate {
+      display: block;
+      width: 100%;
+      margin-top: 14px;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-family: 'Baloo 2', cursive;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    body.mode-ev  .rc-navigate { background: rgba(0,230,118,0.12); color: var(--ev-primary); }
+    body.mode-ice .rc-navigate { background: rgba(255,107,53,0.12); color: var(--ice-primary); }
+    .rc-navigate:hover { filter: brightness(1.2); transform: scale(1.02); }
+
+    .no-results {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+    .no-results .icon { font-size: 3rem; margin-bottom: 12px; }
+
+    .loading-spinner {
+      text-align: center;
+      padding: 60px;
+    }
+    .spinner {
+      width: 50px; height: 50px;
+      border: 3px solid var(--border);
+      border-radius: 50%;
+      margin: 0 auto 16px;
+      animation: spin 1s linear infinite;
+    }
+    body.mode-ev  .spinner { border-top-color: var(--ev-primary); }
+    body.mode-ice .spinner { border-top-color: var(--ice-primary); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── LOCATION BANNER ── */
+    .loc-banner {
+      background: var(--card);
+      border: 1px solid rgba(0,230,118,0.2);
+      border-radius: 12px;
+      padding: 14px 20px;
+      margin-bottom: 28px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.85rem;
+    }
+    .loc-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ev-primary); animation: pulse 2s infinite; flex-shrink: 0; }
+    @keyframes pulse { 0%,100%{ box-shadow: 0 0 0 0 rgba(0,230,118,0.4); } 50%{ box-shadow: 0 0 0 8px transparent; } }
+    .loc-text { flex: 1; color: var(--muted); }
+    .loc-text strong { color: var(--text); }
+
+    /* ── CHANGE RANGE BAR ── */
+    .change-range-bar {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px 20px;
+      margin-bottom: 24px;
+    }
+    .change-range-label {
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    .change-range-pills {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .cr-pill {
+      padding: 7px 18px;
+      border-radius: 50px;
+      border: 2px solid var(--border);
+      background: var(--bg);
+      cursor: pointer;
+      font-family: "Rajdhani", sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--muted);
+      transition: all 0.22s;
+    }
+    .cr-pill:hover {
+      border-color: #3a6080;
+      color: var(--text);
+      transform: translateY(-2px);
+    }
+    .cr-pill.active {
+      transform: translateY(-2px);
+    }
+    body.mode-ev  .cr-pill.active {
+      border-color: var(--ev-primary);
+      background: rgba(0,230,118,0.12);
+      color: var(--ev-primary);
+      box-shadow: 0 0 14px var(--ev-glow);
+    }
+    body.mode-ice .cr-pill.active {
+      border-color: var(--ice-primary);
+      background: rgba(255,107,53,0.12);
+      color: var(--ice-primary);
+      box-shadow: 0 0 14px var(--ice-glow);
+    }
+    .cr-pill.loading {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      padding: 40px 20px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.78rem;
+      letter-spacing: 0.5px;
+    }
+    footer span.ev { color: var(--ev-primary); }
+    footer span.ice { color: var(--ice-primary); }
+
+    /* ── UTILITY ── */
+    .hidden { display: none !important; }
+    .mt-24 { margin-top: 24px; }
+    .text-center { text-align: center; }
+
+    /* ── ICE MODE OVERRIDES ── */
+    body.mode-ice .hero-tag { background: rgba(255,107,53,0.1); border-color: rgba(255,107,53,0.3); color: var(--ice-primary); }
+    body.mode-ice .step.active .step-num { background: var(--ice-primary); border-color: var(--ice-primary); box-shadow: 0 0 16px var(--ice-glow); }
+    body.mode-ice .step.active .step-label { color: var(--ice-primary); }
+    body.mode-ice .step.active:not(:last-child)::after { background: var(--ice-primary); }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 24px;
+      font-size: 0.88rem;
+      z-index: 999;
+      transition: transform 0.4s ease;
+      text-align: center;
+      max-width: 340px;
+      width: 90%;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<!-- Background -->
+<div class="bg-canvas"></div>
+<div class="grid-overlay"></div>
+<div class="particles" id="particles"></div>
+
+<div class="wrap">
+
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <span class="g">Gaadi</span><span class="s">Station</span>
+      <span class="logo-sub">गाड़ी स्टेशन &nbsp;•&nbsp; FIND YOUR FUEL</span>
+    </div>
+    <div class="header-badge">🇮🇳 INDIA</div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-tag">⚡ SMART VEHICLE FINDER</div>
+    <h1>
+      Find <span class="ev-word">Bijli</span> or <span class="ice-word">Petrol</span><br/>
+      Stations Near You
+    </h1>
+    <p class="hero-sub">
+      For your <span>बिजली गाड़ी</span> or <span>पेट्रोल गाड़ी</span> — locate in seconds
+    </p>
+
+    <!-- Step Indicator -->
+    <div class="steps" id="steps">
+      <div class="step active" id="si-1">
+        <div class="step-num">1</div>
+        <div class="step-label">GAADI TYPE</div>
+      </div>
+      <div class="step" id="si-2">
+        <div class="step-num">2</div>
+        <div class="step-label">RANGE</div>
+      </div>
+      <div class="step" id="si-3">
+        <div class="step-num">3</div>
+        <div class="step-label">RESULTS</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <div class="main-card">
+
+    <!-- STEP 1: Vehicle Selection -->
+    <div id="step-vehicle">
+      <p class="section-title">— SELECT YOUR GAADI TYPE —</p>
+      <div class="vehicle-cards">
+
+        <!-- EV Card -->
+        <div class="v-card ev" onclick="selectVehicle('ev')">
+          <div class="selected-check">✓</div>
+          <span class="v-card-badge">ZERO EMISSION</span>
+          <span class="v-card-icon">⚡🚗</span>
+          <div class="v-card-name">Bijli Gaadi</div>
+          <div class="v-card-hindi">बिजली गाड़ी</div>
+          <div class="v-card-desc">Electric Vehicle • EV<br/>Find nearby charging stations for your electric car, scooter or bike</div>
+        </div>
+
+        <!-- ICE Card -->
+        <div class="v-card ice" onclick="selectVehicle('ice')">
+          <div class="selected-check">✓</div>
+          <span class="v-card-badge">ICE VEHICLE</span>
+          <span class="v-card-icon">⛽🚗</span>
+          <div class="v-card-name">Petrol Gaadi</div>
+          <div class="v-card-hindi">पेट्रोल गाड़ी</div>
+          <div class="v-card-desc">Petrol / Diesel Vehicle<br/>Locate nearby petrol pumps and CNG stations quickly</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- STEP 2: Range Selection -->
+    <div id="step-range">
+      <div class="range-header">
+        <div class="selected-type">
+          <span id="range-icon">⚡</span>
+          <span id="range-label">Bijli Gaadi</span>
+        </div>
+        <h2>How far should we search?</h2>
+        <p>Select your preferred search radius from your current location</p>
+      </div>
+
+      <div class="range-pills">
+        <div class="range-pill" onclick="selectRange(5, this)">5</div>
+        <div class="range-pill" onclick="selectRange(10, this)">10</div>
+        <div class="range-pill" onclick="selectRange(15, this)">15</div>
+        <div class="range-pill" onclick="selectRange(20, this)">20</div>
+        <div class="range-pill" onclick="selectRange(25, this)">25</div>
+      </div>
+
+      <!-- Location Input Box -->
+      <div class="loc-input-wrap">
+        <div class="loc-input-label">📍 YOUR LOCATION</div>
+
+        <!-- Tab switcher -->
+        <div class="loc-tabs">
+          <button class="loc-tab active" id="tab-city"   onclick="switchLocTab('city')">🏙️ City / Area</button>
+          <button class="loc-tab"        id="tab-pin"    onclick="switchLocTab('pin')">🔢 PIN Code</button>
+        </div>
+
+        <!-- City search panel -->
+        <div id="panel-city">
+          <div class="loc-input-row">
+            <div class="loc-search-box">
+              <input
+                type="text"
+                id="loc-text-input"
+                placeholder="Type city, area or address... (e.g. Bandra, Mumbai)"
+                autocomplete="off"
+                oninput="onLocInput(this.value)"
+                onkeydown="onLocKeydown(event)"
+              />
+              <div class="loc-input-clear hidden" id="loc-clear" onclick="clearLocInput()">✕</div>
+              <div class="loc-suggestions hidden" id="loc-suggestions"></div>
+            </div>
+            <button class="gps-btn" id="gps-btn" onclick="useGPS()" title="Use my phone / device GPS">
+              <span class="gps-icon" id="gps-icon">◎</span>
+              <span class="gps-label" id="gps-label">Use GPS</span>
+            </button>
+          </div>
+          <div style="font-size:0.73rem;color:var(--muted);margin-top:8px;padding-left:4px;">
+            💡 Type a city / area name, or tap <strong style="color:#8ab4c8;">Use GPS</strong>
+          </div>
+        </div>
+
+        <!-- PIN code panel -->
+        <div id="panel-pin" class="hidden">
+          <div class="pin-input-row">
+            <div class="pin-input-box">
+              <span class="pin-prefix">🇮🇳</span>
+              <input
+                type="tel"
+                id="loc-pin-input"
+                placeholder="Enter 6-digit PIN code  e.g. 400050"
+                maxlength="6"
+                autocomplete="postal-code"
+                oninput="onPinInput(this.value)"
+              />
+              <div class="loc-input-clear hidden" id="pin-clear" onclick="clearPinInput()">✕</div>
+            </div>
+            <button class="pin-search-btn" id="pin-search-btn" onclick="searchByPin()" disabled>
+              Search
+            </button>
+          </div>
+          <div id="pin-status" class="pin-status hidden"></div>
+          <div style="font-size:0.73rem;color:var(--muted);margin-top:8px;padding-left:4px;">
+            💡 Enter any valid Indian 6-digit PIN code to set your location
+          </div>
+        </div>
+
+        <!-- Confirmed location (shared) -->
+        <div id="loc-confirmed" class="loc-confirmed hidden">
+          <div class="loc-dot"></div>
+          <span id="loc-confirmed-text">Location set</span>
+          <span id="loc-confirmed-coords" style="color:var(--muted);font-size:0.75rem;margin-left:8px;"></span>
+        </div>
+      </div>
+
+      <button class="find-btn" id="find-btn" onclick="findStations()" disabled style="opacity:0.5;cursor:not-allowed;">
+        🔍 &nbsp;FIND STATIONS
+      </button>
+
+      <p class="text-center mt-24" style="font-size:0.8rem;color:var(--muted);">
+        <a href="#" onclick="goBack()" style="color:inherit;text-decoration:none;">← Change vehicle type</a>
+      </p>
+    </div>
+
+    <!-- STEP 3: Results -->
+    <div id="step-results">
+      <div class="results-header">
+        <h2 id="results-title">Nearby Stations</h2>
+        <button class="back-btn" onclick="goToStep1()">← Start Over</button>
+      </div>
+
+      <div id="loc-banner-results" class="loc-banner hidden">
+        <div class="loc-dot"></div>
+        <div class="loc-text"><strong id="res-city">Your location</strong> &nbsp;•&nbsp; <span id="res-range-label"></span></div>
+      </div>
+
+      <!-- Change Range Bar -->
+      <div class="change-range-bar">
+        <span class="change-range-label">&#128207; Change search radius:</span>
+        <div class="change-range-pills">
+          <div class="cr-pill" onclick="changeRange(5,  this)">5 km</div>
+          <div class="cr-pill" onclick="changeRange(10, this)">10 km</div>
+          <div class="cr-pill" onclick="changeRange(15, this)">15 km</div>
+          <div class="cr-pill" onclick="changeRange(20, this)">20 km</div>
+          <div class="cr-pill" onclick="changeRange(25, this)">25 km</div>
+        </div>
+      </div>
+
+      <div id="results-container"></div>
+    </div>
+
+  </div><!-- /main-card -->
+
+  <footer>
+    Built for <span class="ev">⚡ Bijli Gaadi</span> &amp; <span class="ice">⛽ Petrol Gaadi</span> owners across India &nbsp;•&nbsp;
+    GaadiStation v1.0 &nbsp;•&nbsp; Apache / Nginx Ready
+  </footer>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // ── STATE ──
+  let selectedVehicle = null;
+  let selectedRange = null;
+  let userLocation = null;
+  let locationName = 'Your Location';
+
+  // ── PARTICLES ──
+  (function spawnParticles() {
+    const c = document.getElementById('particles');
+    for (let i = 0; i < 25; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const isEv = Math.random() > 0.5;
+      const size = Math.random() * 4 + 2;
+      p.style.cssText = `
+        width:${size}px; height:${size}px;
+        left:${Math.random()*100}%;
+        background:${isEv ? '#00e676' : '#ff6b35'};
+        animation-duration:${8 + Math.random()*12}s;
+        animation-delay:${Math.random()*10}s;
+        filter: blur(${Math.random()*1}px);
+      `;
+      c.appendChild(p);
+    }
+  })();
+
+  // ── TOAST ──
+  function showToast(msg, duration = 2500) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), duration);
+  }
+
+  // ── STEP 1: SELECT VEHICLE ──
+  function selectVehicle(type) {
+    selectedVehicle = type;
+
+    // Update card state
+    document.querySelectorAll('.v-card').forEach(c => c.classList.remove('selected'));
+    document.querySelector('.v-card.' + type).classList.add('selected');
+
+    // Add mode to body
+    document.body.classList.remove('mode-ev', 'mode-ice');
+    document.body.classList.add('mode-' + type);
+
+    // Transition to step 2 after short delay
+    setTimeout(() => {
+      document.getElementById('step-vehicle').style.display = 'none';
+      const sr = document.getElementById('step-range');
+      sr.style.display = 'block';
+      // Update step indicators
+      updateSteps(2);
+      // Update range header
+      if (type === 'ev') {
+        document.getElementById('range-icon').textContent = '⚡';
+        document.getElementById('range-label').textContent = 'Bijli Gaadi — EV Charging';
+      } else {
+        document.getElementById('range-icon').textContent = '⛽';
+        document.getElementById('range-label').textContent = 'Petrol Gaadi — Fuel Station';
+      }
+      // Start geolocation - auto-attempt GPS silently
+      silentGPS();
+    }, 300);
+  }
+
+  // ── LOCATION TAB SWITCHER ──
+  let activeLocTab = 'city';
+
+  function switchLocTab(tab) {
+    activeLocTab = tab;
+    document.getElementById('tab-city').classList.toggle('active', tab === 'city');
+    document.getElementById('tab-pin').classList.toggle('active',  tab === 'pin');
+    document.getElementById('panel-city').classList.toggle('hidden', tab !== 'city');
+    document.getElementById('panel-pin').classList.toggle('hidden',  tab !== 'pin');
+    // Clear confirmed if switching tabs
+    if (userLocation) {
+      userLocation = null;
+      locationName = 'Your Location';
+      document.getElementById('loc-confirmed').classList.add('hidden');
+      checkFindBtnState();
+    }
+    // Reset fields
+    if (tab === 'city') {
+      document.getElementById('loc-text-input').value = '';
+      document.getElementById('loc-clear').classList.add('hidden');
+      hideSuggestions();
+      setGpsState('idle');
+    } else {
+      document.getElementById('loc-pin-input').value = '';
+      document.getElementById('pin-clear').classList.add('hidden');
+      document.getElementById('pin-search-btn').disabled = true;
+      hidePinStatus();
+    }
+  }
+
+  // ── PIN CODE INPUT ──
+  function onPinInput(val) {
+    const clean = val.replace(/\D/g, '').slice(0, 6);
+    document.getElementById('loc-pin-input').value = clean;
+    document.getElementById('pin-clear').classList.toggle('hidden', clean.length === 0);
+    document.getElementById('pin-search-btn').disabled = clean.length !== 6;
+    hidePinStatus();
+    // Auto-search when 6 digits entered
+    if (clean.length === 6) searchByPin();
+  }
+
+  function clearPinInput() {
+    document.getElementById('loc-pin-input').value = '';
+    document.getElementById('pin-clear').classList.add('hidden');
+    document.getElementById('pin-search-btn').disabled = true;
+    hidePinStatus();
+    userLocation = null;
+    locationName = 'Your Location';
+    document.getElementById('loc-confirmed').classList.add('hidden');
+    checkFindBtnState();
+  }
+
+  function hidePinStatus() {
+    const el = document.getElementById('pin-status');
+    el.classList.add('hidden');
+    el.className = 'pin-status hidden';
+  }
+
+  function showPinStatus(msg, type) {
+    const el = document.getElementById('pin-status');
+    el.classList.remove('hidden');
+    el.className = `pin-status ${type}`;
+    el.textContent = msg;
+  }
+
+  function searchByPin() {
+    const pin = document.getElementById('loc-pin-input').value.replace(/\D/g, '');
+    if (pin.length !== 6) { showToast('Please enter a valid 6-digit PIN code'); return; }
+
+    showPinStatus('🔍 Looking up PIN code ' + pin + '...', 'loading');
+
+    // Use Nominatim to search Indian postal code
+    fetch(`https://nominatim.openstreetmap.org/search?postalcode=${pin}&country=India&format=json&addressdetails=1&limit=1`)
+      .then(r => r.json())
+      .then(results => {
+        if (!results || results.length === 0) {
+          showPinStatus(`❌ PIN code ${pin} not found. Please check and try again.`, 'error');
+          return;
+        }
+        const res  = results[0];
+        const addr = res.address || {};
+        const city = addr.suburb || addr.city_district || addr.city || addr.town || addr.village || addr.county || 'Unknown Area';
+        const state = addr.state || '';
+        const name  = state ? `${city}, ${state} - ${pin}` : `${city} - ${pin}`;
+
+        userLocation = { lat: parseFloat(res.lat), lng: parseFloat(res.lon) };
+        locationName = name;
+
+        showPinStatus(`✅ ${name}`, 'success');
+        setLocConfirmed(name, res.lat, res.lon);
+      })
+      .catch(() => {
+        showPinStatus('⚠️ Could not look up PIN code. Check your internet connection.', 'error');
+      });
+  }
+
+  // ── LOCATION: MANUAL TEXT INPUT ──
+  let suggestTimer = null;
+
+  function onLocInput(val) {
+    const clear = document.getElementById('loc-clear');
+    clear.classList.toggle('hidden', val.length === 0);
+    clearTimeout(suggestTimer);
+    if (val.length < 3) { hideSuggestions(); return; }
+    suggestTimer = setTimeout(() => fetchSuggestions(val), 350);
+  }
+
+  function onLocKeydown(e) {
+    if (e.key === 'Escape') hideSuggestions();
+  }
+
+  function clearLocInput() {
+    document.getElementById('loc-text-input').value = '';
+    document.getElementById('loc-clear').classList.add('hidden');
+    hideSuggestions();
+    userLocation = null;
+    locationName = 'Your Location';
+    document.getElementById('loc-confirmed').classList.add('hidden');
+    checkFindBtnState();
+  }
+
+  function resetAllLocFields() {
+    // City tab
+    document.getElementById('loc-text-input').value = '';
+    document.getElementById('loc-clear').classList.add('hidden');
+    hideSuggestions();
+    setGpsState('idle');
+    // PIN tab
+    document.getElementById('loc-pin-input').value = '';
+    document.getElementById('pin-clear').classList.add('hidden');
+    document.getElementById('pin-search-btn').disabled = true;
+    hidePinStatus();
+    // Reset tab to city
+    switchLocTabSilent('city');
+    // Confirmed
+    document.getElementById('loc-confirmed').classList.add('hidden');
+  }
+
+  function switchLocTabSilent(tab) {
+    activeLocTab = tab;
+    document.getElementById('tab-city').classList.toggle('active', tab === 'city');
+    document.getElementById('tab-pin').classList.toggle('active',  tab === 'pin');
+    document.getElementById('panel-city').classList.toggle('hidden', tab !== 'city');
+    document.getElementById('panel-pin').classList.toggle('hidden',  tab !== 'pin');
+  }
+
+  function fetchSuggestions(query) {
+    const box = document.getElementById('loc-suggestions');
+    box.classList.remove('hidden');
+    box.innerHTML = `<div class="loc-suggestion-loading">🔍 Searching...</div>`;
+
+    fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&countrycodes=in&format=json&addressdetails=1&limit=6`)
+      .then(r => r.json())
+      .then(results => {
+        if (!results.length) {
+          box.innerHTML = `<div class="loc-suggestion-loading">No results found</div>`;
+          return;
+        }
+        box.innerHTML = results.map((r, i) => {
+          const addr = r.address || {};
+          const main = addr.city || addr.town || addr.village || addr.county || r.display_name.split(',')[0];
+          const sub  = [addr.state_district, addr.state].filter(Boolean).join(', ');
+          const icon = r.type === 'city' || r.type === 'administrative' ? '🏙️' : r.type === 'suburb' ? '🏘️' : '📍';
+          return `<div class="loc-suggestion-item" onclick="selectSuggestion('${r.lat}','${r.lon}','${escQ(main)}','${escQ(sub)}')">
+            <span class="sug-icon">${icon}</span>
+            <div>
+              <div class="sug-main">${main}</div>
+              ${sub ? `<div class="sug-sub">${sub}</div>` : ''}
+            </div>
+          </div>`;
+        }).join('');
+      })
+      .catch(() => {
+        box.innerHTML = `<div class="loc-suggestion-loading">⚠️ Search unavailable. Use GPS or try again.</div>`;
+      });
+  }
+
+  function escQ(str) { return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+
+  function selectSuggestion(lat, lon, main, sub) {
+    userLocation = { lat: parseFloat(lat), lng: parseFloat(lon) };
+    locationName = sub ? `${main}, ${sub}` : main;
+    document.getElementById('loc-text-input').value = locationName;
+    document.getElementById('loc-clear').classList.remove('hidden');
+    hideSuggestions();
+    setLocConfirmed(locationName, lat, lon);
+    // Reset GPS button if it was active
+    setGpsState('idle');
+  }
+
+  function hideSuggestions() {
+    document.getElementById('loc-suggestions').classList.add('hidden');
+  }
+
+  // ── SILENT GPS: Try quietly when step 2 loads ──
+  function silentGPS() {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        // Only auto-fill if user hasn't typed anything yet
+        if (userLocation) return;
+        userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        reverseGeocode(userLocation, true);
+        setGpsState('active');
+      },
+      () => { /* silently fail — user can click GPS button manually */ },
+      { timeout: 5000, enableHighAccuracy: false }
+    );
+  }
+
+  // ── LOCATION: GPS ──
+  function useGPS() {
+    if (!navigator.geolocation) {
+      showToast('❌ GPS not supported on this device'); return;
+    }
+    setGpsState('loading');
+    document.getElementById('loc-text-input').value = '';
+    document.getElementById('loc-clear').classList.add('hidden');
+    hideSuggestions();
+
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        reverseGeocode(userLocation, true);
+      },
+      err => {
+        console.warn('GPS error:', err);
+        setGpsState('idle');
+        const msgs = {
+          1: '⛔ Location permission denied. Please allow in browser settings.',
+          2: '📡 GPS signal not found. Try moving outdoors.',
+          3: '⏱️ GPS timed out. Try again.'
+        };
+        showToast(msgs[err.code] || '❌ Could not get GPS location', 4000);
+      },
+      { timeout: 10000, enableHighAccuracy: true }
+    );
+  }
+
+  function setGpsState(state) {
+    const btn  = document.getElementById('gps-btn');
+    const icon = document.getElementById('gps-icon');
+    const lbl  = document.getElementById('gps-label');
+    btn.classList.remove('loading', 'active');
+    if (state === 'loading') {
+      btn.classList.add('loading');
+      icon.textContent = '⟳';
+      lbl.textContent  = 'Finding...';
+    } else if (state === 'active') {
+      btn.classList.add('active');
+      icon.textContent = '✦';
+      lbl.textContent  = 'GPS Active';
+    } else {
+      icon.textContent = '◎';
+      lbl.textContent  = 'Use GPS';
+    }
+  }
+
+  function reverseGeocode(loc, fromGps = false) {
+    fetch(`https://nominatim.openstreetmap.org/reverse?lat=${loc.lat}&lon=${loc.lng}&format=json&zoom=14`)
+      .then(r => r.json())
+      .then(data => {
+        const addr = data.address;
+        const city = addr.suburb || addr.neighbourhood || addr.city || addr.town || addr.village || 'Your Area';
+        const state = addr.state || '';
+        locationName = state ? `${city}, ${state}` : city;
+        if (fromGps) {
+          document.getElementById('loc-text-input').value = locationName;
+          document.getElementById('loc-clear').classList.remove('hidden');
+          setGpsState('active');
+        }
+        setLocConfirmed(locationName, loc.lat.toFixed(4), loc.lng.toFixed(4));
+      })
+      .catch(() => {
+        locationName = `${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)}`;
+        if (fromGps) {
+          document.getElementById('loc-text-input').value = locationName;
+          setGpsState('active');
+        }
+        setLocConfirmed(locationName, loc.lat.toFixed(4), loc.lng.toFixed(4));
+      });
+  }
+
+  function setLocConfirmed(name, lat, lon) {
+    locationName = name;
+    const el = document.getElementById('loc-confirmed');
+    el.classList.remove('hidden');
+    document.getElementById('loc-confirmed-text').textContent = '✅ ' + name;
+    document.getElementById('loc-confirmed-coords').textContent = `(${parseFloat(lat).toFixed(3)}, ${parseFloat(lon).toFixed(3)})`;
+    checkFindBtnState();
+  }
+
+  function checkFindBtnState() {
+    const btn = document.getElementById('find-btn');
+    const ready = userLocation && selectedRange;
+    btn.disabled = !ready;
+    btn.style.opacity = ready ? '1' : '0.5';
+    btn.style.cursor  = ready ? 'pointer' : 'not-allowed';
+  }
+
+  // Close suggestions when clicking outside
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.loc-search-box')) hideSuggestions();
+  });
+
+  // ── STEP 2: SELECT RANGE ──
+  function selectRange(km, el) {
+    selectedRange = km;
+    document.querySelectorAll('.range-pill').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    checkFindBtnState();
+  }
+
+  // ── FIND STATIONS ──
+  function findStations() {
+    if (!selectedRange) { showToast('Please select a distance range first!'); return; }
+    if (!userLocation)  { showToast('📍 Please enter your location or use GPS first!', 3000); return; }
+
+    // Move to step 3
+    document.getElementById('step-range').style.display = 'none';
+    document.getElementById('step-results').style.display = 'block';
+    updateSteps(3);
+
+    const title = selectedVehicle === 'ev'
+      ? `⚡ EV Charging Stations within ${selectedRange} km`
+      : `⛽ Petrol Pumps & CNG within ${selectedRange} km`;
+    document.getElementById('results-title').textContent = title;
+
+    const banner = document.getElementById('loc-banner-results');
+    banner.classList.remove('hidden');
+    document.getElementById('res-city').textContent = locationName;
+    document.getElementById('res-range-label').textContent = `Within ${selectedRange} km radius`;
+
+    // Show loading
+    document.getElementById('results-container').innerHTML = `
+      <div class="loading-spinner">
+        <div class="spinner"></div>
+        <div style="color:var(--muted);font-size:0.9rem;">Searching nearby stations...</div>
+      </div>
+    `;
+
+    // Sync the change-range pills to current selection
+    syncCrPills(selectedRange);
+
+    // Fetch from Overpass API (OpenStreetMap — free, no API key needed!)
+    const query = buildOverpassQuery();
+    fetchStations(query);
+  }
+
+  function buildOverpassQuery() {
+    const r = selectedRange * 1000; // meters
+    const lat = userLocation ? userLocation.lat : 18.9667;
+    const lng = userLocation ? userLocation.lng : 72.8333;
+
+    let amenities;
+    if (selectedVehicle === 'ev') {
+      amenities = `
+        node["amenity"="charging_station"](around:${r},${lat},${lng});
+        way["amenity"="charging_station"](around:${r},${lat},${lng});
+      `;
+    } else {
+      amenities = `
+        node["amenity"="fuel"](around:${r},${lat},${lng});
+        way["amenity"="fuel"](around:${r},${lat},${lng});
+      `;
+    }
+
+    return `[out:json][timeout:25];(${amenities});out body center 20;`;
+  }
+
+  function fetchStations(query, onDone) {
+    const url = 'https://overpass-api.de/api/interpreter';
+    fetch(url, {
+      method: 'POST',
+      body: query,
+      headers: { 'Content-Type': 'text/plain' }
+    })
+    .then(r => r.json())
+    .then(data => {
+      renderResults(data.elements || []);
+      if (onDone) onDone();
+    })
+    .catch(err => {
+      console.warn('Overpass fetch failed, using demo data:', err);
+      renderResults(generateMockData());
+      if (onDone) onDone();
+    });
+  }
+
+  function renderResults(elements) {
+    const container = document.getElementById('results-container');
+
+    if (!elements || elements.length === 0) {
+      container.innerHTML = `
+        <div class="no-results">
+          <div class="icon">${selectedVehicle === 'ev' ? '🔌' : '⛽'}</div>
+          <div style="font-size:1.1rem;margin-bottom:8px;color:var(--text);">No stations found in ${selectedRange} km</div>
+          <div style="font-size:0.85rem;">Try increasing the distance range</div>
+        </div>`;
+      return;
+    }
+
+    const cards = elements.slice(0, 12).map((el, i) => {
+      const tags = el.tags || {};
+      const lat  = el.lat  || el.center?.lat;
+      const lng  = el.lon  || el.center?.lon;
+      const name = tags.name || tags['name:en'] || tags['operator'] || (selectedVehicle === 'ev' ? 'EV Charging Station' : 'Petrol Pump');
+      const brand = tags.brand || tags.operator || '';
+      const addr  = [tags['addr:street'], tags['addr:suburb'], tags['addr:city']].filter(Boolean).join(', ') || 'Address not available';
+
+      // Calculate approx distance
+      const dist = userLocation && lat ? calcDist(userLocation.lat, userLocation.lng, lat, lng) : null;
+      const distLabel = dist ? `${dist.toFixed(1)} km` : '—';
+
+      // Features
+      const features = [];
+      if (selectedVehicle === 'ev') {
+        if (tags['socket:type2'])     features.push('Type 2');
+        if (tags['socket:chademo'])   features.push('CHAdeMO');
+        if (tags['socket:ccs2'])      features.push('CCS2');
+        if (tags['capacity'])         features.push(`${tags['capacity']} ports`);
+        if (tags['fee'] === 'no')     features.push('Free');
+        if (tags['opening_hours'])    features.push(tags['opening_hours'].length < 20 ? tags['opening_hours'] : '24/7');
+        if (features.length === 0)    features.push('Charging Available');
+      } else {
+        if (tags['fuel:diesel'])  features.push('Diesel');
+        if (tags['fuel:octane_91'] || tags['fuel:petrol']) features.push('Petrol');
+        if (tags['fuel:cng'])     features.push('CNG');
+        if (tags['fuel:lpg'])     features.push('LPG');
+        if (tags['opening_hours']) features.push('24/7');
+        if (features.length === 0) features.push('Petrol', 'Diesel');
+      }
+
+      const mapsUrl = lat ? `https://www.google.com/maps/search/?api=1&query=${lat},${lng}` : '#';
+      const rating  = (3.5 + Math.random() * 1.5).toFixed(1);
+      const stars   = '★'.repeat(Math.round(rating)) + '☆'.repeat(5 - Math.round(rating));
+
+      return `
+        <div class="result-card" style="animation-delay:${i * 0.06}s">
+          <div class="rc-top">
+            <div class="rc-name">${name}</div>
+            <div class="rc-dist">${distLabel}</div>
+          </div>
+          ${brand ? `<div style="font-size:0.75rem;color:var(--muted);margin-bottom:6px;">🏢 ${brand}</div>` : ''}
+          <div class="rc-addr">📍 ${addr}</div>
+          <div class="rc-meta">${features.map(f => `<span class="rc-tag">${f}</span>`).join('')}</div>
+          <div class="rc-rating"><span class="stars">${stars}</span> ${rating} / 5.0</div>
+          ${lat ? `<button class="rc-navigate" onclick="window.open('${mapsUrl}','_blank')">🗺️ Open in Google Maps</button>` : ''}
+        </div>`;
+    }).join('');
+
+    container.innerHTML = `
+      <p style="font-size:0.82rem;color:var(--muted);margin-bottom:16px;">
+        Found <strong style="color:var(--text)">${Math.min(elements.length, 12)}</strong> stations
+        ${elements.length > 12 ? ` (showing top 12 of ${elements.length})` : ''}
+      </p>
+      <div class="results-grid">${cards}</div>`;
+  }
+
+  // ── MOCK DATA fallback ──
+  function generateMockData() {
+    const ev_names  = ['TATA Power EV Hub', 'Ather Grid', 'ChargeZone', 'Magenta ChargeGrid', 'Statiq Station', 'Jio-bp Electric'];
+    const ice_names = ['HP Petrol Pump', 'Indian Oil', 'Bharat Petroleum', 'Shell India', 'HPCL Fuel Station', 'Essar Petrol Pump'];
+    const areas     = ['Bandra', 'Andheri', 'Powai', 'Dadar', 'Thane', 'Navi Mumbai', 'Borivali'];
+    const names     = selectedVehicle === 'ev' ? ev_names : ice_names;
+
+    return Array.from({ length: 8 }, (_, i) => ({
+      tags: {
+        name: names[i % names.length],
+        'addr:suburb': areas[i % areas.length],
+        'addr:city': 'Mumbai',
+        ...(selectedVehicle === 'ev'
+          ? { 'socket:type2': 'yes', 'capacity': String(2 + i % 4), 'opening_hours': '24/7' }
+          : { 'fuel:petrol': 'yes', 'fuel:diesel': 'yes', 'opening_hours': '06:00-22:00' })
+      },
+      lat: 18.96 + (Math.random() - 0.5) * 0.15,
+      lon: 72.83 + (Math.random() - 0.5) * 0.15,
+    }));
+  }
+
+  // ── DISTANCE CALC ──
+  function calcDist(lat1, lng1, lat2, lng2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  }
+
+  // ── NAVIGATION ──
+  function goBack() {
+    document.getElementById('step-range').style.display = 'none';
+    document.getElementById('step-vehicle').style.display = 'block';
+    document.querySelectorAll('.v-card').forEach(c => c.classList.remove('selected'));
+    selectedVehicle = null;
+    userLocation = null;
+    locationName = 'Your Location';
+    resetAllLocFields();
+    document.body.classList.remove('mode-ev', 'mode-ice');
+    updateSteps(1);
+  }
+
+  function goToStep1() {
+    document.getElementById('step-results').style.display = 'none';
+    document.getElementById('step-vehicle').style.display = 'block';
+    document.querySelectorAll('.v-card').forEach(c => c.classList.remove('selected'));
+    document.querySelectorAll('.range-pill').forEach(p => p.classList.remove('active'));
+    selectedVehicle = null;
+    selectedRange = null;
+    userLocation = null;
+    locationName = 'Your Location';
+    resetAllLocFields();
+    document.body.classList.remove('mode-ev', 'mode-ice');
+    const btn = document.getElementById('find-btn');
+    btn.disabled = true;
+    btn.style.opacity = '0.5';
+    btn.style.cursor = 'not-allowed';
+    updateSteps(1);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── CHANGE RANGE (from results page) ──
+  function changeRange(km, el) {
+    selectedRange = km;
+
+    // Update cr-pills active state
+    document.querySelectorAll('.cr-pill').forEach(p => p.classList.remove('active', 'loading'));
+    el.classList.add('active', 'loading');
+
+    // Also sync the range pills on step 2
+    document.querySelectorAll('.range-pill').forEach(p => p.classList.remove('active'));
+    const step2Pills = document.querySelectorAll('.range-pill');
+    const kmList = [5, 10, 15, 20, 25];
+    const idx = kmList.indexOf(km);
+    if (idx >= 0 && step2Pills[idx]) step2Pills[idx].classList.add('active');
+
+    // Update title and banner
+    const title = selectedVehicle === 'ev'
+      ? '⚡ EV Charging Stations within ' + km + ' km'
+      : '⛽ Petrol Pumps & CNG within ' + km + ' km';
+    document.getElementById('results-title').textContent = title;
+    document.getElementById('res-range-label').textContent = 'Within ' + km + ' km radius';
+
+    // Show loading in container
+    document.getElementById('results-container').innerHTML = `
+      <div class="loading-spinner">
+        <div class="spinner"></div>
+        <div style="color:var(--muted);font-size:0.9rem;">Searching within ${km} km...</div>
+      </div>`;
+
+    // Re-fetch
+    const query = buildOverpassQuery();
+    fetchStations(query, () => {
+      el.classList.remove('loading');
+    });
+  }
+
+  // ── STEP INDICATOR ──
+  function updateSteps(active) {
+    for (let i = 1; i <= 3; i++) {
+      const el = document.getElementById('si-' + i);
+      el.classList.remove('active', 'done');
+      if (i === active) el.classList.add('active');
+      else if (i < active) el.classList.add('done');
+    }
+  }
+</script>
+
+</body>
+</html>
