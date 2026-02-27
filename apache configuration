@@ -1,0 +1,24 @@
+yum install mod_ssl
+openssl req -x509 -nodes -days 365 -newkey rsa:2048   -keyout /etc/ssl/private/gaadi.key   -out /etc/ssl/certs/gaadi.crt
+
+vim /etc/httpd/conf/httpd.conf
+#HTTP
+<Virtualhost *:80>
+        Servername www.GadiStation.local
+        RewriteEngine On
+        RewriteCond %{HTTPS} !=on
+        RewriteRule ^(.*)$ https://%{HTTP_HOST}$1 [R=301,L]
+#DocumentRoot /var/www/html/GadiStation
+</Virtualhost>
+# HTTPS
+<VirtualHost *:443>
+        ServerName www.GadiStation.local
+        DocumentRoot /var/www/html/GadiStation
+        SSLEngine on
+        SSLCertificateFile    /etc/ssl/certs/gaadi.crt
+        SSLCertificateKeyFile /etc/ssl/private/gaadi.key
+<Directory /var/www/html/GadiStation>
+        AllowOverride All
+        Require all granted
+</Directory>
+</VirtualHost>
