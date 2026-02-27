@@ -10,7 +10,6 @@
    TOKENS — Light theme, deep green + deep blue
 ═══════════════════════════════════════════════════════════ */
 :root {
-  /* Brand — rich, dark tones that pop on light bg */
   --ev:        #166534;
   --ev-dim:    #14532d;
   --ev-mid:    #16a34a;
@@ -21,8 +20,6 @@
   --ice-mid:   #2563eb;
   --ice-light: #dbeafe;
   --ice-glow:  rgba(30,64,175,.12);
-
-  /* Light surfaces */
   --bg:        #f4f9f6;
   --bg2:       #eaf3ee;
   --panel:     #ffffff;
@@ -30,18 +27,12 @@
   --card2:     #f8fffe;
   --border:    rgba(0,0,0,.09);
   --border2:   rgba(0,0,0,.14);
-
-  /* Dark text */
   --t1:  #0d1f16;
   --t2:  #3a6b51;
   --t3:  #86a896;
-
-  /* Soft shadows for light bg */
   --s1: 0 1px 3px rgba(0,0,0,.07), 0 2px 8px rgba(0,0,0,.05);
   --s2: 0 4px 12px rgba(0,0,0,.09), 0 8px 28px rgba(0,0,0,.06);
   --s3: 0 12px 36px rgba(0,0,0,.12), 0 4px 14px rgba(0,0,0,.07);
-
-  /* Radius */
   --r1: 10px;
   --r2: 16px;
   --r3: 24px;
@@ -58,7 +49,6 @@ body {
   overflow-x:hidden;
 }
 
-/* ── BACKGROUND ── */
 .bg-layer {
   position:fixed; inset:0; z-index:0; pointer-events:none;
   background:
@@ -85,7 +75,6 @@ body {
   box-shadow:-60px 0 0 rgba(22,101,52,.03), 60px 0 0 rgba(22,101,52,.03);
 }
 
-/* ── PARTICLES ── */
 #particles { position:fixed; inset:0; z-index:0; pointer-events:none; }
 .particle {
   position:absolute; border-radius:50%;
@@ -98,12 +87,8 @@ body {
   100% { transform:translateY(-8vh) scale(1); opacity:0; }
 }
 
-/* ── WRAP ── */
 .wrap { position:relative; z-index:1; display:flex; flex-direction:column; min-height:100vh; }
 
-/* ══════════════════════════════════════════════════════
-   HEADER
-══════════════════════════════════════════════════════ */
 header {
   position:sticky; top:0; z-index:200;
   display:grid; grid-template-columns:1fr auto 1fr;
@@ -126,7 +111,6 @@ header {
 .logo-name b   { font-style:normal; color:var(--ice); }
 .logo-name .sub { display:block; font-size:.5rem; font-weight:400; letter-spacing:3px; color:var(--t3); margin-top:3px; }
 
-/* Desktop stepper */
 .header-steps { display:flex; align-items:center; gap:0; justify-content:center; }
 @media(max-width:680px){ .header-steps { display:none; } }
 
@@ -159,9 +143,6 @@ body.mode-ice .hstep.active + .hstep-line { background:var(--ice-mid); }
   font-size:.7rem; font-weight:700; color:var(--t2); letter-spacing:.5px;
 }
 
-/* ══════════════════════════════════════════════════════
-   HERO
-══════════════════════════════════════════════════════ */
 .hero { padding:72px 24px 48px; text-align:center; position:relative; overflow:hidden; }
 
 .hero-pill {
@@ -203,7 +184,6 @@ body.mode-ice .hstep.active + .hstep-line { background:var(--ice-mid); }
   to   { opacity:1; transform:translateY(0); }
 }
 
-/* Mobile stepper */
 .mobile-steps { display:none; justify-content:center; margin-top:28px; gap:8px; align-items:center; animation:fadeUp 1s .32s ease both; }
 @media(max-width:680px){ .mobile-steps { display:flex; } }
 .mstep {
@@ -222,14 +202,8 @@ body.mode-ice .mstep.active + .mstep-line,
 body.mode-ice .mstep.done   + .mstep-line { background:var(--ice-mid); }
 .mstep-lbl { display:none; }
 
-/* ══════════════════════════════════════════════════════
-   CONTENT
-══════════════════════════════════════════════════════ */
 .content { flex:1; max-width:960px; width:100%; margin:0 auto; padding:0 20px 100px; }
 
-/* ══════════════════════════════════════════════════════
-   STEP 1 — VEHICLE CARDS
-══════════════════════════════════════════════════════ */
 #step-vehicle { animation:stepIn .5s ease both; }
 
 .step-eyebrow {
@@ -266,10 +240,8 @@ body.mode-ice .mstep.done   + .mstep-line { background:var(--ice-mid); }
 }
 .vcard.ev::after  { background:radial-gradient(ellipse 70% 50% at 50% -5%,rgba(22,101,52,.06),transparent 55%); }
 .vcard.ice::after { background:radial-gradient(ellipse 70% 50% at 50% -5%,rgba(30,64,175,.06),transparent 55%); }
-
 .vcard:hover::before, .vcard.selected::before { opacity:1; }
 .vcard:hover::after,  .vcard.selected::after  { opacity:1; }
-
 .vcard.ev:hover,  .vcard.ev.selected  {
   border-color:var(--ev-mid); transform:translateY(-8px) scale(1.01);
   box-shadow:0 0 0 1px var(--ev-mid), 0 20px 50px rgba(22,101,52,.12), var(--s2);
@@ -278,7 +250,6 @@ body.mode-ice .mstep.done   + .mstep-line { background:var(--ice-mid); }
   border-color:var(--ice-mid); transform:translateY(-8px) scale(1.01);
   box-shadow:0 0 0 1px var(--ice-mid), 0 20px 50px rgba(30,64,175,.12), var(--s2);
 }
-
 .vcard-corner { position:absolute; top:0; right:0; width:60px; height:60px; overflow:hidden; }
 .vcard-corner::after {
   content:''; position:absolute; top:-30px; right:-30px;
@@ -286,7 +257,6 @@ body.mode-ice .mstep.done   + .mstep-line { background:var(--ice-mid); }
 }
 .vcard.ev  .vcard-corner::after { background:var(--ev); }
 .vcard.ice .vcard-corner::after { background:var(--ice); }
-
 .vcheck {
   position:absolute; top:16px; left:16px;
   width:26px; height:26px; border-radius:50%;
@@ -297,14 +267,12 @@ body.mode-ice .mstep.done   + .mstep-line { background:var(--ice-mid); }
 }
 .vcard.ev.selected  .vcheck { opacity:1; transform:scale(1) rotate(0deg); background:var(--ev); }
 .vcard.ice.selected .vcheck { opacity:1; transform:scale(1) rotate(0deg); background:var(--ice); }
-
 .vbadge {
   position:absolute; top:16px; right:16px;
   font-size:.55rem; font-weight:800; letter-spacing:1.5px; padding:4px 10px; border-radius:8px;
 }
 .vcard.ev  .vbadge { background:var(--ev-light); color:var(--ev);  border:1px solid rgba(22,101,52,.2); }
 .vcard.ice .vbadge { background:var(--ice-light); color:var(--ice); border:1px solid rgba(30,64,175,.2); }
-
 .vicon {
   font-size:3.6rem; display:block; margin-bottom:16px;
   filter:drop-shadow(0 4px 10px rgba(0,0,0,.15));
@@ -312,17 +280,12 @@ body.mode-ice .mstep.done   + .mstep-line { background:var(--ice-mid); }
 }
 .vcard.ice .vicon { animation-delay:1.6s; }
 @keyframes bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
-
 .vname { font-size:1.9rem; font-weight:800; letter-spacing:-.5px; margin-bottom:3px; position:relative; z-index:1; }
 .vcard.ev  .vname { color:var(--ev); }
 .vcard.ice .vname { color:var(--ice); }
-
 .vhindi { font-family:'Noto Sans Devanagari',sans-serif; font-size:1.05rem; color:var(--t2); margin:3px 0 12px; position:relative; z-index:1; }
 .vdesc  { font-size:.8rem; color:var(--t3); line-height:1.6; position:relative; z-index:1; }
 
-/* ══════════════════════════════════════════════════════
-   STEP 2 — RANGE + LOCATION
-══════════════════════════════════════════════════════ */
 #step-range { display:none; animation:stepIn .5s ease both; }
 
 .range-top { text-align:center; margin-bottom:36px; }
@@ -349,7 +312,6 @@ body.mode-ice .mstep.done   + .mstep-line { background:var(--ice-mid); }
 body.mode-ev  .rpill.active { border-color:var(--ev);  background:var(--ev-light);  color:var(--ev);  box-shadow:0 0 0 1px var(--ev), 0 6px 20px rgba(22,101,52,.18); }
 body.mode-ice .rpill.active { border-color:var(--ice); background:var(--ice-light); color:var(--ice); box-shadow:0 0 0 1px var(--ice), 0 6px 20px rgba(30,64,175,.18); }
 
-/* Location card */
 .loc-card {
   max-width:600px; margin:0 auto 32px;
   background:var(--card); border:1px solid var(--border2);
@@ -361,7 +323,6 @@ body.mode-ice .rpill.active { border-color:var(--ice); background:var(--ice-ligh
 }
 .loc-card-title::after { content:''; flex:1; height:1px; background:var(--border); }
 
-/* Segmented tabs */
 .segtabs {
   display:flex; gap:4px; padding:4px;
   background:var(--bg2); border-radius:12px; margin-bottom:18px;
@@ -375,7 +336,6 @@ body.mode-ice .rpill.active { border-color:var(--ice); background:var(--ice-ligh
 .segtab:hover { color:var(--t2); }
 .segtab.active { background:var(--panel); color:var(--t1); box-shadow:var(--s1); }
 
-/* City input */
 .city-row { display:flex; gap:10px; align-items:flex-start; }
 .citybox  { flex:1; position:relative; }
 .citybox input {
@@ -396,7 +356,6 @@ body.mode-ice .citybox input:focus { border-color:var(--ice-mid); box-shadow:0 0
 }
 .clr-btn:hover { color:var(--t1); background:var(--border2); }
 
-/* Suggestions */
 .suggest-list {
   position:absolute; top:calc(100% + 8px); left:0; right:0;
   background:var(--panel); border:1px solid var(--border2);
@@ -415,7 +374,6 @@ body.mode-ice .citybox input:focus { border-color:var(--ice-mid); box-shadow:0 0
 .sug-sub  { color:var(--t3); font-size:.72rem; margin-top:2px; }
 .sug-load { padding:14px 16px; color:var(--t3); font-size:.84rem; }
 
-/* GPS button */
 .gps-btn {
   display:flex; flex-direction:column; align-items:center;
   gap:3px; padding:11px 14px; border-radius:var(--r1);
@@ -435,7 +393,14 @@ body.mode-ice .gps-btn.active { background:var(--ice-light); border-color:var(--
 .hint { font-size:.7rem; color:var(--t3); margin-top:9px; padding-left:2px; font-weight:500; }
 .hint strong { color:var(--ev); }
 
-/* PIN */
+/* GPS warning banner */
+.https-warn {
+  display:none; align-items:center; gap:8px; padding:10px 14px;
+  background:#fffbeb; border:1px solid #fbbf24; border-radius:var(--r1);
+  font-size:.78rem; color:#92400e; margin-bottom:12px; line-height:1.5;
+}
+.https-warn.show { display:flex; }
+
 .pin-row { display:flex; gap:10px; }
 .pinbox {
   flex:1; display:flex; align-items:center;
@@ -470,7 +435,6 @@ body.mode-ice .pin-go:not(:disabled) { border-color:var(--ice); color:var(--ice)
 .pin-status.success { background:var(--ev-light); color:var(--ev); border:1px solid rgba(22,101,52,.25); }
 body.mode-ice .pin-status.success { background:var(--ice-light); color:var(--ice); border-color:rgba(30,64,175,.25); }
 
-/* Confirmed location */
 .loc-confirmed {
   display:flex; align-items:center; gap:10px; margin-top:12px; padding:10px 16px;
   background:var(--ev-light); border:1px solid rgba(22,101,52,.2);
@@ -487,7 +451,6 @@ body.mode-ice .loc-pulse { background:var(--ice); }
   50%      { box-shadow:0 0 0 8px transparent; }
 }
 
-/* CTA Button */
 .cta-btn {
   display:flex; align-items:center; justify-content:center; gap:10px;
   margin:0 auto; padding:17px 60px; border-radius:60px; border:none; cursor:pointer;
@@ -511,9 +474,6 @@ body.mode-ice .cta-btn { background:linear-gradient(135deg,var(--ice-mid),var(--
 }
 .back-link:hover { color:var(--t2); }
 
-/* ══════════════════════════════════════════════════════
-   STEP 3 — RESULTS
-══════════════════════════════════════════════════════ */
 #step-results { display:none; animation:stepIn .5s ease both; }
 
 .results-nav { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; gap:12px; flex-wrap:wrap; }
@@ -524,7 +484,6 @@ body.mode-ice .cta-btn { background:linear-gradient(135deg,var(--ice-mid),var(--
 }
 .restart-btn:hover { border-color:var(--t1); color:var(--t1); }
 
-/* Info bar */
 .info-bar {
   display:flex; align-items:center; gap:10px;
   background:var(--panel); border:1px solid var(--border2);
@@ -534,7 +493,6 @@ body.mode-ice .cta-btn { background:linear-gradient(135deg,var(--ice-mid),var(--
 .info-bar strong { color:var(--t1); }
 .info-bar span   { color:var(--t3); }
 
-/* Range bar */
 .rangebar {
   display:flex; align-items:center; gap:12px; flex-wrap:wrap;
   background:var(--panel); border:1px solid var(--border); box-shadow:var(--s1);
@@ -553,10 +511,8 @@ body.mode-ev  .crpill.active { border-color:var(--ev);  background:var(--ev-ligh
 body.mode-ice .crpill.active { border-color:var(--ice); background:var(--ice-light); color:var(--ice); box-shadow:0 0 0 1px var(--ice), 0 3px 10px rgba(30,64,175,.15); }
 .crpill.loading { opacity:.5; pointer-events:none; }
 
-/* Results grid */
 .rgrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(268px,1fr)); gap:16px; }
 
-/* Result card */
 .rcard {
   background:var(--card); border:1px solid var(--border2);
   border-radius:var(--r2); padding:18px; position:relative; overflow:hidden;
@@ -604,7 +560,6 @@ body.mode-ev  .rc-directions { background:var(--bg2); color:var(--ev-mid); borde
 body.mode-ice .rc-directions { background:var(--bg2); color:var(--ice-mid); border-color:rgba(30,64,175,.15); }
 .rc-navigate:hover, .rc-directions:hover { filter:brightness(.95); transform:scale(1.02); box-shadow:var(--s1); }
 
-/* Inline map */
 .inline-map { margin-top:10px; border-radius:var(--r1); overflow:hidden; border:1px solid var(--border2); animation:stepIn .3s ease both; }
 .imap-bar {
   display:flex; align-items:center; gap:8px; padding:8px 12px;
@@ -616,12 +571,10 @@ body.mode-ice .rc-directions { background:var(--bg2); color:var(--ice-mid); bord
 .imap-close { background:none; border:none; color:var(--t3); cursor:pointer; padding:2px 6px; border-radius:6px; transition:all .2s; font-size:.85rem; }
 .imap-close:hover { color:var(--t1); background:var(--border); }
 
-/* Empty state */
 .empty-state { text-align:center; padding:72px 20px; color:var(--t3); }
 .empty-state .ico { font-size:3.2rem; margin-bottom:14px; }
 .empty-state h3 { color:var(--t1); font-size:1.2rem; margin-bottom:8px; }
 
-/* Skeleton */
 @keyframes shimmer {
   0%   { background-position:-500px 0; }
   100% { background-position: 500px 0; }
@@ -632,9 +585,6 @@ body.mode-ice .rc-directions { background:var(--bg2); color:var(--ice-mid); bord
   background-size:500px 100%; animation:shimmer 1.4s infinite;
 }
 
-/* ══════════════════════════════════════════════════════
-   FOOTER
-══════════════════════════════════════════════════════ */
 footer {
   text-align:center; padding:32px 20px;
   border-top:1px solid var(--border);
@@ -644,9 +594,7 @@ footer {
 footer .fe { color:var(--ev); }
 footer .fi { color:var(--ice); }
 
-/* ══════════════════════════════════════════════════════
-   TOAST
-══════════════════════════════════════════════════════ */
+/* ── TOAST — wider + line-wrap support for long GPS messages ── */
 .toast {
   position:fixed; bottom:28px; left:50%;
   transform:translateX(-50%) translateY(90px);
@@ -654,14 +602,13 @@ footer .fi { color:var(--ice); }
   border-radius:var(--r2); padding:13px 22px;
   font-size:.86rem; font-weight:600; z-index:999;
   transition:transform .4s cubic-bezier(.34,1.3,.64,1);
-  text-align:center; max-width:340px; width:90%;
+  text-align:center; max-width:420px; width:92%;
   box-shadow:var(--s3); color:var(--panel);
+  line-height:1.55;
+  word-break:break-word;
 }
 .toast.show { transform:translateX(-50%) translateY(0); }
 
-/* ══════════════════════════════════════════════════════
-   ANIMATION
-══════════════════════════════════════════════════════ */
 @keyframes stepIn {
   from { opacity:0; transform:translateY(22px); }
   to   { opacity:1; transform:translateY(0); }
@@ -669,9 +616,6 @@ footer .fi { color:var(--ice); }
 
 .hidden { display:none !important; }
 
-/* ══════════════════════════════════════════════════════
-   RESPONSIVE
-══════════════════════════════════════════════════════ */
 @media(max-width:680px) {
   .hero { padding:48px 16px 32px; }
   .content { padding:0 14px 80px; }
@@ -690,7 +634,6 @@ footer .fi { color:var(--ice); }
 </head>
 <body>
 
-<!-- BG layers -->
 <div class="bg-layer"></div>
 <div class="bg-grid"></div>
 <div class="bg-road"></div>
@@ -698,7 +641,6 @@ footer .fi { color:var(--ice); }
 
 <div class="wrap">
 
-<!-- ═══════ HEADER ═══════ -->
 <header>
   <div class="logo">
     <div class="logo-mark">⛽</div>
@@ -708,7 +650,6 @@ footer .fi { color:var(--ice); }
     </div>
   </div>
 
-  <!-- Desktop stepper (hidden on mobile) -->
   <div class="header-steps">
     <div class="hstep active" id="si-1">
       <div class="hstep-num">1</div>
@@ -731,7 +672,6 @@ footer .fi { color:var(--ice); }
   </div>
 </header>
 
-<!-- ═══════ HERO ═══════ -->
 <section class="hero">
   <div class="hero-pill">
     <div class="hero-pill-dot">⚡</div>
@@ -753,7 +693,6 @@ footer .fi { color:var(--ice); }
     <div class="hbadge"><div class="hbadge-dot" style="background:#60a5fa"></div>All Across India</div>
   </div>
 
-  <!-- Mobile stepper -->
   <div class="mobile-steps">
     <div class="mstep active" id="msi-1">1</div>
     <div class="mstep-line"></div>
@@ -763,10 +702,8 @@ footer .fi { color:var(--ice); }
   </div>
 </section>
 
-<!-- ═══════ CONTENT ═══════ -->
 <div class="content">
 
-  <!-- STEP 1: Vehicle -->
   <div id="step-vehicle">
     <div class="step-eyebrow">SELECT YOUR GAADI TYPE</div>
     <div class="vgrid">
@@ -794,7 +731,6 @@ footer .fi { color:var(--ice); }
     </div>
   </div>
 
-  <!-- STEP 2: Range + Location -->
   <div id="step-range">
     <div class="range-top">
       <div class="range-type-chip"><span id="range-icon">⚡</span><span id="range-label">Bijli Gaadi — EV Charging</span></div>
@@ -818,8 +754,11 @@ footer .fi { color:var(--ice); }
         <button class="segtab" id="tab-pin" onclick="switchLocTab('pin')">🔢 PIN Code</button>
       </div>
 
-      <!-- City panel -->
       <div id="panel-city">
+        <!-- HTTPS warning banner — shown only on http:// on real hosts -->
+        <div class="https-warn" id="https-warn">
+          ⚠️ <span>GPS requires <strong>HTTPS</strong>. This page is on HTTP. Please open it via <strong>https://</strong> for GPS to work, or type your city name below.</span>
+        </div>
         <div class="city-row">
           <div class="citybox">
             <input type="text" id="loc-text-input" placeholder="Type city, area or address… (e.g. Bandra, Mumbai)" autocomplete="off" oninput="onLocInput(this.value)" onkeydown="onLocKeydown(event)"/>
@@ -831,10 +770,9 @@ footer .fi { color:var(--ice); }
             <span class="gps-lbl" id="gps-label">GPS</span>
           </button>
         </div>
-        <div class="hint">💡 Type a city / area name, or tap <strong>GPS</strong> to auto-detect</div>
+        <div class="hint" id="gps-hint">💡 Type a city / area name, or tap <strong>GPS</strong> to auto-detect</div>
       </div>
 
-      <!-- PIN panel -->
       <div id="panel-pin" class="hidden">
         <div class="pin-row">
           <div class="pinbox">
@@ -848,7 +786,6 @@ footer .fi { color:var(--ice); }
         <div class="hint">💡 Enter any valid Indian 6-digit PIN code</div>
       </div>
 
-      <!-- Confirmed -->
       <div id="loc-confirmed" class="loc-confirmed hidden">
         <div class="loc-pulse"></div>
         <span id="loc-confirmed-text">Location set</span>
@@ -862,7 +799,6 @@ footer .fi { color:var(--ice); }
     <a href="#" class="back-link" onclick="goBack();return false;">← Change vehicle type</a>
   </div>
 
-  <!-- STEP 3: Results -->
   <div id="step-results">
     <div class="results-nav">
       <h2 id="results-title">Nearby Stations</h2>
@@ -888,12 +824,12 @@ footer .fi { color:var(--ice); }
     <div id="results-container"></div>
   </div>
 
-</div><!-- /content -->
+</div>
 
 <footer>
-  Built for <span class="fe">⚡ Bijli Gaadi</span> &amp; <span class="fi">⛽ Petrol Gaadi</span> owners across India &nbsp;·&nbsp; GaadiStation v3.0
+  Built for <span class="fe">⚡ Bijli Gaadi</span> &amp; <span class="fi">⛽ Petrol Gaadi</span> owners across India &nbsp;·&nbsp; GaadiStation v3.1
 </footer>
-</div><!-- /wrap -->
+</div>
 
 <div class="toast" id="toast"></div>
 
@@ -934,6 +870,13 @@ function nominatimFetch(path) {
 
 const hasGoogleKey = () => CONFIG.GOOGLE_API_KEY && CONFIG.GOOGLE_API_KEY !== 'YOUR_GOOGLE_API_KEY_HERE';
 
+/* ── Detect if we're on HTTP (non-localhost) — GPS won't work there ── */
+const isHttpNonLocal = () =>
+  location.protocol === 'http:' &&
+  location.hostname !== 'localhost' &&
+  location.hostname !== '127.0.0.1' &&
+  !location.hostname.startsWith('192.168.');
+
 let selectedVehicle = null, selectedRange = null, userLocation = null;
 let locationName = 'Your Location', searchCache = {}, lastSearchKey = '';
 let activeLocTab = 'city', suggestTimer = null;
@@ -950,11 +893,26 @@ let activeLocTab = 'city', suggestTimer = null;
   }
 })();
 
+/* ── Show HTTPS warning banner if needed ── */
+(function(){
+  if(isHttpNonLocal()){
+    const w = document.getElementById('https-warn');
+    if(w) w.classList.add('show');
+    const btn = document.getElementById('gps-btn');
+    if(btn){ btn.style.opacity='.45'; btn.title='GPS needs HTTPS'; }
+    const hint = document.getElementById('gps-hint');
+    if(hint) hint.innerHTML = '⚠️ GPS unavailable on HTTP. Type your city name, or open this page via <strong>https://</strong>';
+  }
+})();
+
 /* ── TOAST ── */
-function showToast(msg,dur=2500){
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),dur);
+let toastTimer = null;
+function showToast(msg, dur=2800){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), dur);
 }
 
 /* ── STEP 1: VEHICLE ── */
@@ -1084,47 +1042,121 @@ function selectSuggestion(lat,lon,main,sub){
 }
 function hideSuggestions(){ document.getElementById('loc-suggestions').classList.add('hidden'); }
 
-/* ── GPS ── */
+/* ══════════════════════════════════════════════════════
+   GPS — FIXED for mobile browsers
+   Root causes addressed:
+   1. HTTP pages: browser blocks geolocation API entirely on mobile
+   2. iOS Safari: needs Settings → Privacy → Location Services → Safari → Allow
+   3. Chrome Android: needs lock icon → Site Settings → Location → Allow
+   4. maximumAge:0 forces fresh fix (avoids stale cached denials)
+   5. Increased timeout to 15s for slow GPS locks indoors
+══════════════════════════════════════════════════════ */
 function silentGPS(){
   if(!navigator.geolocation) return;
+  // Don't attempt on HTTP non-local — will always fail on mobile
+  if(isHttpNonLocal()) return;
   navigator.geolocation.getCurrentPosition(
-    pos=>{ if(userLocation) return; userLocation={lat:pos.coords.latitude,lng:pos.coords.longitude}; reverseGeocode(userLocation,true); setGpsState('active'); },
-    ()=>{},{timeout:5000,enableHighAccuracy:false}
+    pos=>{
+      if(userLocation) return; // already set by user typing
+      userLocation={lat:pos.coords.latitude,lng:pos.coords.longitude};
+      reverseGeocode(userLocation,true);
+      setGpsState('active');
+    },
+    ()=>{},
+    {timeout:6000,enableHighAccuracy:false,maximumAge:30000}
   );
 }
+
 function useGPS(){
-  if(!navigator.geolocation){ showToast('❌ GPS not supported'); return; }
+  if(!navigator.geolocation){
+    showToast('❌ GPS not supported on this browser');
+    return;
+  }
+
+  // Hard block: mobile browsers will always deny on HTTP (not localhost)
+  if(isHttpNonLocal()){
+    showToast('⚠️ GPS requires HTTPS. Open this page via https:// or type your city name below.', 6000);
+    setGpsState('idle');
+    return;
+  }
+
   setGpsState('loading');
   document.getElementById('loc-text-input').value='';
-  document.getElementById('loc-clear').classList.add('hidden'); hideSuggestions();
+  document.getElementById('loc-clear').classList.add('hidden');
+  hideSuggestions();
+
   navigator.geolocation.getCurrentPosition(
-    pos=>{ userLocation={lat:pos.coords.latitude,lng:pos.coords.longitude}; reverseGeocode(userLocation,true); },
-    err=>{ setGpsState('idle'); const m={1:'⛔ Location denied.',2:'📡 GPS not found.',3:'⏱️ GPS timed out.'}; showToast(m[err.code]||'❌ GPS error',4000); },
-    {timeout:10000,enableHighAccuracy:true}
+    pos=>{
+      userLocation = {lat:pos.coords.latitude, lng:pos.coords.longitude};
+      reverseGeocode(userLocation, true);
+    },
+    err=>{
+      setGpsState('idle');
+      const isIOS     = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+      const isAndroid = /Android/i.test(navigator.userAgent);
+      let msg;
+
+      if(err.code === 1){ // PERMISSION_DENIED
+        if(isIOS){
+          msg = '⛔ Location denied. Fix: Settings → Privacy & Security → Location Services → Safari (or your browser) → "While Using App". Then reload.';
+        } else if(isAndroid){
+          msg = '⛔ Location denied. Fix: tap the 🔒 icon in the address bar → Permissions → Location → Allow. Then retry GPS.';
+        } else {
+          msg = '⛔ Location denied. Click the 🔒 lock icon in the address bar, set Location to Allow, then try again.';
+        }
+      } else if(err.code === 2){ // POSITION_UNAVAILABLE
+        msg = '📡 Location unavailable. Make sure your phone\'s Location (GPS) is turned ON in system Settings, then retry.';
+      } else if(err.code === 3){ // TIMEOUT
+        msg = '⏱️ GPS timed out. Try moving to an open area, or type your city name manually.';
+      } else {
+        msg = '❌ GPS error: ' + (err.message||'unknown') + '. Try typing your city name.';
+      }
+
+      showToast(msg, 8000);
+    },
+    {
+      timeout:15000,
+      enableHighAccuracy:true,
+      maximumAge:0  // always request fresh position — avoids stale permission state
+    }
   );
 }
+
 function setGpsState(s){
-  const btn=document.getElementById('gps-btn'), ico=document.getElementById('gps-icon'), lbl=document.getElementById('gps-label');
+  const btn=document.getElementById('gps-btn');
+  const ico=document.getElementById('gps-icon');
+  const lbl=document.getElementById('gps-label');
   btn.className='gps-btn';
   if(s==='loading'){ btn.classList.add('loading'); ico.textContent='⟳'; lbl.textContent='Finding...'; }
   else if(s==='active'){ btn.classList.add('active'); ico.textContent='✦'; lbl.textContent='Located'; }
   else { ico.textContent='◎'; lbl.textContent='GPS'; }
+  // Keep the button slightly dimmed on HTTP
+  if(isHttpNonLocal()) btn.style.opacity='.45';
 }
+
 function reverseGeocode(loc,fromGps=false){
   nominatimFetch(`/reverse?lat=${loc.lat}&lon=${loc.lng}&format=json&zoom=14`)
     .then(data=>{
       const a=data.address;
       const city=a.suburb||a.neighbourhood||a.city||a.town||a.village||'Your Area';
       locationName=(a.state?`${city}, ${a.state}`:city);
-      if(fromGps){ document.getElementById('loc-text-input').value=locationName; document.getElementById('loc-clear').classList.remove('hidden'); setGpsState('active'); }
+      if(fromGps){
+        document.getElementById('loc-text-input').value=locationName;
+        document.getElementById('loc-clear').classList.remove('hidden');
+        setGpsState('active');
+      }
       setLocConfirmed(locationName,loc.lat.toFixed(4),loc.lng.toFixed(4));
     })
     .catch(()=>{
       locationName=`${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)}`;
-      if(fromGps){ document.getElementById('loc-text-input').value=locationName; setGpsState('active'); }
+      if(fromGps){
+        document.getElementById('loc-text-input').value=locationName;
+        setGpsState('active');
+      }
       setLocConfirmed(locationName,loc.lat.toFixed(4),loc.lng.toFixed(4));
     });
 }
+
 function setLocConfirmed(name,lat,lon){
   locationName=name;
   const el=document.getElementById('loc-confirmed');
@@ -1364,7 +1396,6 @@ function hideInlineMap(id){
 }
 
 function updateSteps(active){
-  // Header stepper
   for(let i=1;i<=3;i++){
     const el=document.getElementById('si-'+i);
     if(!el)continue;
@@ -1372,7 +1403,6 @@ function updateSteps(active){
     if(i===active)el.classList.add('active');
     else if(i<active)el.classList.add('done');
   }
-  // Mobile stepper
   for(let i=1;i<=3;i++){
     const el=document.getElementById('msi-'+i);
     if(!el)continue;
